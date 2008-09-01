@@ -13,6 +13,12 @@ public class SimpleMBR implements MBR {
 	this.ymax = ymax;
     }
 
+    @Override public String toString () {
+	return getClass ().getSimpleName () + 
+	    "{xmin: " + xmin + ", ymin: " + ymin + 
+	    ", xmax: " + xmax + ", ymax: " + ymax + "}";
+    }
+
     public double getMin (int ordinate) {
 	if (ordinate == 0)
 	    return xmin;
@@ -29,5 +35,18 @@ public class SimpleMBR implements MBR {
 	    return ymax;
 	throw new IllegalArgumentException ("not able to get ordinate; " + 
 					    ordinate);
+    }
+
+    public MBR union (MBR other) {
+	double uxmin = Math.min (xmin, other.getMin (0));
+	double uymin = Math.min (ymin, other.getMin (1));
+	double uxmax = Math.max (xmax, other.getMax (0));
+	double uymax = Math.max (ymax, other.getMax (1));
+	return new SimpleMBR (uxmin, uymin, uxmax, uymax);
+    }
+
+    public boolean intersects (MBR other) {
+	return !(other.getMax (0) < xmin || other.getMin (0) > xmax || 
+		 other.getMax (1) < ymin || other.getMin (1) > ymax);
     }
 }

@@ -1,7 +1,9 @@
 package org.khelekore.prtree.junit;
 
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -47,6 +49,18 @@ public class TestRTree {
 	    count++;
 	}
 	assertEquals ("odd number of rectangles returned", 1, count);
+    }
+
+    @Test
+    public void testMany () {
+	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (1000);
+	for (int i = 0; i < 1000; i++)
+	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
+	tree.load (rects);
+	int count = 0;
+	for (Rectangle2D r : tree.find (475, 475, 525, 525)) 
+	    count++;
+	assertTrue ("should find some rectangles", count > 0);
     }
 
     public static void main (String args[]) {
