@@ -26,18 +26,20 @@ public class PRTree<T> {
     public void load (Collection<? extends T> data) {
 	List<T> ls = new ArrayList<T> (data);
 	Collections.sort (ls, new OrdComparator (0));
-	List<LeafNode> leafNodes = new ArrayList<LeafNode> ();
+	List<LeafNode<T>> leafNodes = new ArrayList<LeafNode<T>> ();
 	buildLeafs (ls, leafNodes);
 
 	if (leafNodes.size () > branchFactor) {
 	    // TODO: build
 	    root = Collections.emptyList ();
 	} else {
-	    root = new ArrayList<Node<T>> (leafNodes);
+	    root = new InternalNode<T> (leafNodes.size (), converter);
+	    for (LeafNode<T> n : leafNodes)
+		root.add (n);
 	}
     }
 
-    private void buildLeafs (List<T> ls, List<LeafNode> leafNodes) {
+    private void buildLeafs (List<T> ls, List<LeafNode<T>> leafNodes) {
 	LinkedHashMap<T, T> rsx = getLHM (ls);
 	Collections.sort (ls, new OrdComparator (1));
 	LinkedHashMap<T, T> rsy = getLHM (ls);
@@ -53,7 +55,7 @@ public class PRTree<T> {
 
     private void buildLeafs (LinkedHashMap<T, T> sx,
 			     LinkedHashMap<T, T> sy,
-			     List<LeafNode> leafNodes) {
+			     List<LeafNode<T>> leafNodes) {
 	if (sx.size () > 0)
 	    leafNodes.add (getLowLeafNode (sx, sx, sy));
 
@@ -83,25 +85,25 @@ public class PRTree<T> {
 	return s;
     }
 
-    private LeafNode getLowLeafNode (LinkedHashMap<T, T> lsBase,
+    private LeafNode<T> getLowLeafNode (LinkedHashMap<T, T> lsBase,
 				     LinkedHashMap<T, T> sx,
 				     LinkedHashMap<T, T> sy) {
 	List<T> ls = new ArrayList<T> (lsBase.keySet ());
-	LeafNode vxMin = new LeafNode (branchFactor);
+	LeafNode<T> vxMin = new LeafNode<T> (branchFactor, converter);
 	fillLow (vxMin, getNum (ls), ls, sx, sy);
 	return vxMin;
     }
 
-    private LeafNode getHighLeafNode (LinkedHashMap<T, T> lsBase,
+    private LeafNode<T> getHighLeafNode (LinkedHashMap<T, T> lsBase,
 					 LinkedHashMap<T, T> sx,
 					 LinkedHashMap<T, T> sy) {
 	List<T> ls = new ArrayList<T> (lsBase.keySet ());
-	LeafNode vxMin = new LeafNode (branchFactor);
+	LeafNode<T> vxMin = new LeafNode<T> (branchFactor, converter);
 	fillHigh (vxMin, getNum (ls), ls, sx, sy);
 	return vxMin;
     }
 
-    private void fillLow (LeafNode ln, int num, List<T> ls,
+    private void fillLow (LeafNode<T> ln, int num, List<T> ls,
 			  LinkedHashMap<T, T> sx, LinkedHashMap<T, T> sy) {
 	for (int i = 0; i < num; i++) {
 	    T t = ls.get (i);
@@ -111,7 +113,7 @@ public class PRTree<T> {
 	}
     }
 
-    private void fillHigh (LeafNode ln, int num, List<T> ls,
+    private void fillHigh (LeafNode<T> ln, int num, List<T> ls,
 			   LinkedHashMap<T, T> sx, LinkedHashMap<T, T> sy) {
 	int s = ls.size ();
 	for (int i = 0; i < num; i++) {
@@ -119,77 +121,6 @@ public class PRTree<T> {
 	    ln.add (t);
 	    sx.remove (t);
 	    sy.remove (t);
-	}
-    }
-
-    private interface Node<T> {
-	MBR getMBR ();
-
-	void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand);
-    }
-
-    private abstract class NodeBase<N> extends ArrayList<N> implements Node<T> {
-	private MBR mbr;
-
-	public NodeBase (int size) {
-	    super (size);
-	}
-
-	public MBR getMBR () {
-	    if (mbr == null)
-		mbr = computeMBR ();
-	    return mbr;
-	}
-
-	public MBR getMBR (T t) {
-	    return new SimpleMBR (converter.getMin (t, 0),
-				  converter.getMin (t, 1),
-				  converter.getMax (t, 0),
-				  converter.getMax (t, 1));
-	}
-
-	public abstract MBR computeMBR ();
-
-	public MBR getUnion (MBR m1, MBR m2) {
-	    if (m1 == null)
-		return m2;
-	    return m1.union (m2);
-	}
-    }
-
-    private class LeafNode extends NodeBase<T> {
-	public LeafNode (int size) {
-	    super (size);
-	}
-
-	@Override public MBR computeMBR () {
-	    MBR ret = null;
-	    for (T t : this) 
-		ret = getUnion (ret, getMBR (t));
-	    return ret;
-	}
-
-	public void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand) {
-	    for (T t : this) 
-		if (mbr.intersects (getMBR (t))) 
-		    found.add (t);
-	}
-    }
-
-    private class InternalNode extends NodeBase<Node<T>> {
-	public InternalNode (int size) {
-	    super (size);
-	}
-
-	@Override public MBR computeMBR () {
-	    MBR ret = null;
-	    for (Node<T> n : this)
-		ret = getUnion (ret, n.getMBR ());
-	    return ret;
-	}
-
-	public void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand) {
-	    // TODO: implement
 	}
     }
 
@@ -207,6 +138,7 @@ public class PRTree<T> {
     }
 
     /** Find all objects that intersect the given rectangle
+     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax 
      */
     public Iterable<T> find (final double xmin, final double ymin,
 			     final double xmax, final double ymax) {
@@ -225,6 +157,10 @@ public class PRTree<T> {
 	private T next;
 
 	public Finder (double xmin, double ymin, double xmax, double ymax) {
+	    if (xmax < xmin)
+		throw new IllegalArgumentException ("xmax: " + xmax + " < xmin: " + xmin);
+	    if (ymax < ymin)
+		throw new IllegalArgumentException ("ymax: " + ymax + " < ymin: " + ymin);
 	    mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
 	    toVisit = new ArrayList<Node<T>> (root);
 	    findNext ();

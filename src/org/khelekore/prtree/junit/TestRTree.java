@@ -49,6 +49,22 @@ public class TestRTree {
 	    count++;
 	}
 	assertEquals ("odd number of rectangles returned", 1, count);
+
+	for (Rectangle2D r : tree.find (5, 5, 6, 7)) 
+	    fail ("should not find any rectangle");
+
+	for (Rectangle2D r : tree.find (-5, -5, -2, -4)) 
+	    fail ("should not find any rectangle");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBadQueryRectX () {
+	tree.find (0, 0, -1, 1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBadQueryRectY () {
+	tree.find (0, 0, 1, -1);
     }
 
     @Test
