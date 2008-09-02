@@ -50,10 +50,10 @@ public class TestRTree {
 	}
 	assertEquals ("odd number of rectangles returned", 1, count);
 
-	for (Rectangle2D r : tree.find (5, 5, 6, 7)) 
+	for (Rectangle2D r : tree.find (5, 5, 6, 7))
 	    fail ("should not find any rectangle");
 
-	for (Rectangle2D r : tree.find (-5, -5, -2, -4)) 
+	for (Rectangle2D r : tree.find (-5, -5, -2, -4))
 	    fail ("should not find any rectangle");
     }
 
@@ -74,7 +74,7 @@ public class TestRTree {
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
 	tree.load (rects);
 	int count = 0;
-	for (Rectangle2D r : tree.find (475, 475, 525, 525)) 
+	for (Rectangle2D r : tree.find (475, 475, 525, 525))
 	    count++;
 	assertTrue ("should find some rectangles", count > 0);
     }
