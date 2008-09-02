@@ -27,9 +27,13 @@ class LeafBuilder {
 				   NodeFactory<N, T> nf) {
 	Collections.sort (ls, xSorter);
 	LinkedHashMap<T, T> rsx = getLHM (ls);
+
 	Collections.sort (ls, ySorter);
 	LinkedHashMap<T, T> rsy = getLHM (ls);
-	buildLeafs (rsx, rsy, leafNodes, xSorter, ySorter, nf);
+
+	List<LHMHolder<T>> toExpand = new ArrayList<LHMHolder<T>> ();
+	toExpand.add (new LHMHolder<T> (rsx, rsy));
+	internalBuildLeafs (toExpand, leafNodes, xSorter, ySorter, nf);
     }
 
     private <T> LinkedHashMap<T, T> getLHM (List<T> sorted) {
@@ -39,33 +43,47 @@ class LeafBuilder {
 	return ret;
     }
 
-    private <T, N> void buildLeafs (LinkedHashMap<T, T> sx,
-				    LinkedHashMap<T, T> sy,
-				    List<N> leafNodes,
-				    Comparator<T> xSorter,
-				    Comparator<T> ySorter,
-				    NodeFactory<N, T> nf) {
-	if (sx.size () > 0)
-	    leafNodes.add (getLowLeafNode (sx, sx, sy, nf));
+    private static class LHMHolder<T> {
+	public LinkedHashMap<T, T> sx;
+	public LinkedHashMap<T, T> sy;
+	
+	public LHMHolder (LinkedHashMap<T, T> sx, LinkedHashMap<T, T> sy) {
+	    this.sx = sx;
+	    this.sy = sy;
+	}
+    }
 
-	if (sy.size () > 0)
-	    leafNodes.add (getLowLeafNode (sy, sx, sy, nf));
+    private <T, N> void internalBuildLeafs (List<LHMHolder<T>> toExpand,
+					    List<N> leafNodes,
+					    Comparator<T> xSorter,
+					    Comparator<T> ySorter,
+					    NodeFactory<N, T> nf) {
+	while (!toExpand.isEmpty ()) {
+	    LHMHolder<T> lh = toExpand.remove (0);
+	    LinkedHashMap<T, T> sx = lh.sx;
+	    LinkedHashMap<T, T> sy = lh.sy;
+	    if (sx.size () > 0)
+		leafNodes.add (getLowLeafNode (sx, sx, sy, nf));
+	    
+	    if (sy.size () > 0)
+		leafNodes.add (getLowLeafNode (sy, sx, sy, nf));
+	    
+	    if (sx.size () > 0)
+		leafNodes.add (getHighLeafNode (sx, sx, sy, nf));
 
-	if (sx.size () > 0)
-	    leafNodes.add (getHighLeafNode (sx, sx, sy, nf));
-
-	if (sy.size () > 0)
-	    leafNodes.add (getHighLeafNode (sy, sx, sy, nf));
-
-	if (sx.size () > 0) {
-	    List<T> ls = new ArrayList<T> (sx.keySet ());
-	    int s = ls.size () / 2;
-	    LinkedHashMap<T, T> lowX = getLHM (ls.subList (0, s));
-	    LinkedHashMap<T, T> lowY = getY (sy, lowX);
-	    LinkedHashMap<T, T> highX = getLHM (ls.subList (s, ls.size ()));
-	    LinkedHashMap<T, T> highY = getY (sy, lowX);
-	    buildLeafs (lowX, lowY, leafNodes, xSorter, ySorter, nf);
-	    buildLeafs (highX, highY, leafNodes, xSorter, ySorter, nf);
+	    if (sy.size () > 0)
+		leafNodes.add (getHighLeafNode (sy, sx, sy, nf));
+	    
+	    if (sx.size () > 0) {
+		List<T> ls = new ArrayList<T> (sx.keySet ());
+		int s = ls.size () / 2;
+		LinkedHashMap<T, T> lowX = getLHM (ls.subList (0, s));
+		LinkedHashMap<T, T> lowY = getY (sy, lowX);
+		toExpand.add (new LHMHolder<T> (lowX, lowY));
+		LinkedHashMap<T, T> highX = getLHM (ls.subList (s, ls.size ()));
+		LinkedHashMap<T, T> highY = getY (sy, lowX);
+		toExpand.add (new LHMHolder<T> (highX, highY));
+	    }
 	}
     }
 

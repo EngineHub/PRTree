@@ -70,13 +70,20 @@ public class TestRTree {
     @Test
     public void testMany () {
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (1000);
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < 10000; i++)
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
 	tree.load (rects);
 	int count = 0;
-	for (Rectangle2D r : tree.find (475, 475, 525, 525))
+	
+	// dx = 10, each rect is 10 so 20 in total
+	for (Rectangle2D r : tree.find (495, 495, 504.9, 504.9))
 	    count++;
-	assertTrue ("should find some rectangles", count > 0);
+	assertEquals ("should find some rectangles", 20, count);
+
+	count = 0;
+	for (Rectangle2D r : tree.find (1495, 495, 1504.9, 504.9))
+	    count++;
+	assertEquals ("should not find rectangles", 0, count);
     }
 
     public static void main (String args[]) {
