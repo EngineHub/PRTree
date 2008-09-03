@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
+import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.MBRConverter;
 import org.khelekore.prtree.PRTree;
 import static org.junit.Assert.*;
@@ -37,12 +38,18 @@ public class TestRTree {
 	tree.load (Collections.<Rectangle2D>emptyList ());
 	for (Rectangle2D r : tree.find (0, 0, 1, 1))
 	    fail ("should not get any results");
+	assertNull ("mbr of empty tress should be null", tree.getMBR ());
     }
 
     @Test
     public void testSingle () {
 	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
 	tree.load (Collections.singletonList (rx));
+	MBR mbr = tree.getMBR ();
+	assertEquals ("odd min for mbr", 0, mbr.getMin (0), 0);
+	assertEquals ("odd min for mbr", 0, mbr.getMin (1), 0);
+	assertEquals ("odd max for mbr", 1, mbr.getMax (0), 0);
+	assertEquals ("odd max for mbr", 1, mbr.getMax (1), 0);
 	int count = 0;
 	for (Rectangle2D r : tree.find (0, 0, 1, 1)) {
 	    assertEquals ("odd rectangle returned", rx, r);

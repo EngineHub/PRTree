@@ -10,7 +10,7 @@ public class PRTree<T> {
     private MBRConverter<T> converter;
     private int branchFactor;
 
-    private List<Node<T>> root;
+    private Node<T> root;
 
     /** Create a new PRTree using the specified branch factor.
      * @param branchFactor the number of child nodes for each internal node.
@@ -44,10 +44,15 @@ public class PRTree<T> {
 	}
     }
 
+    public MBR getMBR () {
+	return root.getMBR ();
+    }
+
     private <N extends Node<T>> void setRoot (List<N> nodes) {
-	root = new InternalNode<T> (nodes.size (), converter);
+	InternalNode<T> newRoot = new InternalNode<T> (nodes.size (), converter);
 	for (Node<T> n : nodes)
-	    root.add (n);
+	    newRoot.add (n);
+	root = newRoot;
     }
 
     private class LeafNodeFactory 
@@ -97,7 +102,8 @@ public class PRTree<T> {
 
 	public Finder (double xmin, double ymin, double xmax, double ymax) {
 	    mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
-	    toVisit = new ArrayList<Node<T>> (root);
+	    toVisit = new ArrayList<Node<T>> ();
+	    toVisit.add (root);
 	    findNext ();
 	}
 
