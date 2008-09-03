@@ -1,5 +1,7 @@
 package org.khelekore.prtree;
 
+/** A minimum bounding rectangle
+ */ 
 public interface MBR {
     /** Get the minimum value in the given ordinate.
      * @param ordinate the coordinate position (0, 1, 2, ...).

@@ -5,6 +5,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+/** A Priority R-Tree, a spatial index.
+ *  This tree only supports bulk loading.
+ * @param T the data type stored in the PRTree
+ */
 public class PRTree<T> {
 
     private MBRConverter<T> converter;
@@ -20,6 +24,9 @@ public class PRTree<T> {
 	this.branchFactor = branchFactor;
     }
 
+    /** Bulk load data into this tree.
+     * @param data the collection of data to store in the tree.
+     */
     public void load (Collection<? extends T> data) {
 	List<T> ls = new ArrayList<T> (data);
 	OrdComparator<T> xSorter = new OrdComparator<T> (0, converter);
@@ -44,6 +51,8 @@ public class PRTree<T> {
 	}
     }
 
+    /** Get a minimum bounding rectangle of the data stored in this tree.
+     */ 
     public MBR getMBR () {
 	return root.getMBR ();
     }
@@ -77,7 +86,7 @@ public class PRTree<T> {
 	}
     }
 
-    /** Find all objects that intersect the given rectangle
+    /** Find all objects that intersect the given rectangle.
      * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax 
      */
     public Iterable<T> find (final double xmin, final double ymin,

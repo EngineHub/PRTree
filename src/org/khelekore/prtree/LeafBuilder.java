@@ -5,6 +5,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+/** A builder of internal nodes used during bulk loading of a PR-Tree.
+ *  A PR-Tree is build by building a pseudo R-Tree and grabbing the
+ *  leaf nodes (and then repeating until you have just one root node).
+ *  This class creates the leaf nodes without building the full pseudo tree.
+ */
 class LeafBuilder {
 
     private int branchFactor;
@@ -13,13 +18,19 @@ class LeafBuilder {
 	this.branchFactor = branchFactor;
     }
 
+    /** A factory that creates the nodes (either leaf or internal).
+     */
     public interface NodeFactory<N, T> {
 	/** Create a new node */
 	N create ();
+
 	/** Add a data element to the node */
 	void add (N node, T data);
     }
 
+    /** Information needed to be able to figure out how an
+     *  element of the tree is currently used.
+     */
     private static class NodeUsage<T> {
 	private T data;
 	private byte used = 0;
@@ -27,19 +38,21 @@ class LeafBuilder {
 	public NodeUsage (T data) {
 	    this.data = data;
 	}
-	
+
 	public T getData () {
 	    return data;
 	}
-	
+
 	public void use () {
 	    used = 1;
 	}
 
+	/** Use this node for the low part during splits */
 	public void useLow () {
 	    used = 2;
 	}
 
+	/** Use this node for the low part during splits */
 	public void useHigh () {
 	    used = 4;
 	}
@@ -61,13 +74,15 @@ class LeafBuilder {
 	}
     }
 
+    /** Sort NodeUsage elements on their data elements.
+     */
     private static class NodeUsageSorter<T> implements Comparator<NodeUsage<T>> {
 	private Comparator<T> sorter;
-	
+
 	public NodeUsageSorter (Comparator<T> sorter) {
 	    this.sorter = sorter;
 	}
-	
+
 	public int compare (NodeUsage<T> n1, NodeUsage<T> n2) {
 	    return sorter.compare (n1.getData (), n2.getData ());
 	}
@@ -84,7 +99,7 @@ class LeafBuilder {
 	    lsx.add (nu);
 	    lsy.add (nu);
 	}
-	
+
 	Collections.sort (lsx, new NodeUsageSorter<T> (xSorter));
 	Collections.sort (lsy, new NodeUsageSorter<T> (ySorter));
 	List<ListHolder<T>> toExpand = new ArrayList<ListHolder<T>> ();
@@ -93,6 +108,7 @@ class LeafBuilder {
     }
 
     private static class ListHolder<T> {
+	// Same NodeUsage objects in both lists, just ordered differently.
 	public List<NodeUsage<T>> sx;
 	public List<NodeUsage<T>> sy;
 	private int xlow = 0;
@@ -108,15 +124,6 @@ class LeafBuilder {
 	    yhigh = xhigh;
 	}
 
-	public List<NodeUsage<T>> getUnusedElements () {
-	    ArrayList<NodeUsage<T>> ls = 
-		new ArrayList<NodeUsage<T>> (elementsLeft ());
-	    for (NodeUsage<T> nu : sx)
-		if (!nu.isUsed ())
-		    ls.add (nu);
-	    return ls;
-	}
-	
 	public boolean hasMoreData () {
 	    return elementsLeft () > 0;
 	}
@@ -130,7 +137,7 @@ class LeafBuilder {
 		xlow++;
 	    return sx.get (xlow++);
 	}
-	
+
 	public T getFirstUnusedX () {
 	    taken++;
 	    NodeUsage<T> nu = getFirstUnusedXNode ();
@@ -152,7 +159,7 @@ class LeafBuilder {
 		xhigh--;
 	    return sx.get (xhigh--);
 	}
-	
+
 	public T getLastUnusedX () {
 	    taken++;
 	    NodeUsage<T> nu = getLastUnusedXNode ();
@@ -169,7 +176,7 @@ class LeafBuilder {
 	    return nu.getData ();
 	}
 
-	/** Split the remaining data into two parts, 
+	/** Split the remaining data into two parts,
 	 *  one part with the low x values and one with the high x values.
 	 */
 	public List<ListHolder<T>> split () {
@@ -178,11 +185,13 @@ class LeafBuilder {
 	    int sizeHigh = e - sizeLow;
 	    List<NodeUsage<T>> lowX = new ArrayList<NodeUsage<T>> (sizeLow);
 	    List<NodeUsage<T>> highX = new ArrayList<NodeUsage<T>> (sizeHigh);
-	    
+
 	    // fill with null so that we can set it from the back later on.
 	    for (int i = 0; i < sizeHigh; i++)
 		highX.add (null);
-	    
+
+	    // pick a low element to the low list, mark as low,
+	    // pick a high element to the high list, mark as high
 	    int highPos = sizeHigh - 1;
 	    while (hasMoreData ()) {
 		taken++;
@@ -197,7 +206,8 @@ class LeafBuilder {
 		}
 	    }
 	    sx = null;
-
+	    
+	    // split the Y-list using the usage markings
 	    List<NodeUsage<T>> lowY = new ArrayList<NodeUsage<T>> (sizeLow);
 	    List<NodeUsage<T>> highY = new ArrayList<NodeUsage<T>> (sizeHigh);
 	    for (NodeUsage<T> nu : sy) {
@@ -223,18 +233,18 @@ class LeafBuilder {
 					    NodeFactory<N, T> nf) {
 	while (!toExpand.isEmpty ()) {
 	    ListHolder<T> lh = toExpand.remove (0);
-	    if (lh.hasMoreData ()) 
+	    if (lh.hasMoreData ())
 		leafNodes.add (getLowXNode (lh, nf));
 
 	    if (lh.hasMoreData ())
 		leafNodes.add (getLowYNode (lh, nf));
-	    
+
 	    if (lh.hasMoreData ())
 		leafNodes.add (getHighXNode (lh, nf));
 
 	    if (lh.hasMoreData ())
 		leafNodes.add (getHighYNode (lh, nf));
-	    
+
 	    if (lh.hasMoreData ()) {
 		List<ListHolder<T>> splitted = lh.split ();
 		toExpand.addAll (splitted);
@@ -243,7 +253,7 @@ class LeafBuilder {
     }
 
     private <T> int getNum (ListHolder<T> lh) {
-	int s = lh.elementsLeft (); 
+	int s = lh.elementsLeft ();
 	if (s > branchFactor)
 	    return branchFactor;
 	return s;
@@ -251,28 +261,28 @@ class LeafBuilder {
 
     private <T, N> N getLowXNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
 	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++) 
+	for (int i = 0, s = getNum (lh); i < s; i++)
 	    nf.add (node, lh.getFirstUnusedX ());
 	return node;
     }
 
     private <T, N> N getLowYNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
 	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++) 
+	for (int i = 0, s = getNum (lh); i < s; i++)
 	    nf.add (node, lh.getFirstUnusedY ());
 	return node;
     }
-    
+
     private <T, N> N getHighXNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
 	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++) 
+	for (int i = 0, s = getNum (lh); i < s; i++)
 	    nf.add (node, lh.getLastUnusedX ());
 	return node;
     }
 
     private <T, N> N getHighYNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
 	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++) 	    
+	for (int i = 0, s = getNum (lh); i < s; i++)
 	    nf.add (node, lh.getLastUnusedY ());
 	return node;
     }

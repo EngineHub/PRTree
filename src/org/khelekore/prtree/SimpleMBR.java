@@ -1,5 +1,8 @@
 package org.khelekore.prtree;
 
+/** An implementation of MBR that keeps 4 double values for the actual min and 
+ *  max values needed.
+ */
 public class SimpleMBR implements MBR {
     private final double xmin;
     private final double ymin;
