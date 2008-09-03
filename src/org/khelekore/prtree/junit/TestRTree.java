@@ -70,7 +70,7 @@ public class TestRTree {
     @Test
     public void testMany () {
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (1000);
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 1000000; i++)
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
 	tree.load (rects);
 	int count = 0;
