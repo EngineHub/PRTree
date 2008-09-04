@@ -73,8 +73,8 @@ public class PRTree<T> {
 
     private class LeafNodeFactory
 	implements LeafBuilder.NodeFactory<LeafNode<T>, T> {
-	public LeafNode<T> create () {
-	    return new LeafNode<T> (branchFactor, converter);
+	public LeafNode<T> create (int size) {
+	    return new LeafNode<T> (size, converter);
 	}
 
 	public void add (LeafNode<T> node, T data) {
@@ -84,8 +84,8 @@ public class PRTree<T> {
 
     private class InternalNodeFactory
 	implements LeafBuilder.NodeFactory<InternalNode<T>, Node<T>> {
-	public InternalNode<T> create () {
-	    return new InternalNode<T> (branchFactor, converter);
+	public InternalNode<T> create (int size) {
+	    return new InternalNode<T> (size, converter);
 	}
 
 	public void add (InternalNode<T> node, Node<T> data) {

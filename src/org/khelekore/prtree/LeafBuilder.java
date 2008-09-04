@@ -23,62 +23,10 @@ class LeafBuilder {
      */
     public interface NodeFactory<N, T> {
 	/** Create a new node */
-	N create ();
+	N create (int size);
 
 	/** Add a data element to the node */
 	void add (N node, T data);
-    }
-
-    /** Information needed to be able to figure out how an
-     *  element of the tree is currently used.
-     */
-    private static class NodeUsage<T> {
-	private T data;
-	private short user;
-	private boolean used;
-
-	public NodeUsage (T data) {
-	    this.data = data;
-	}
-
-	public T getData () {
-	    return data;
-	}
-
-	public void use () {
-	    used = true;
-	}
-
-	public boolean isUsed () {
-	    return used;
-	}
-
-	public void setUser (int id) {
-	    user = (short)id;
-	}
-
-	public int getUser () {
-	    return (user & 0xffff);
-	}
-
-	@Override public String toString () {
-	    return getClass ().getSimpleName () + "{data: " + data +
-		", used: " + isUsed () + ", user: " + getUser () + "}";
-	}
-    }
-
-    /** Sort NodeUsage elements on their data elements.
-     */
-    private static class NodeUsageSorter<T> implements Comparator<NodeUsage<T>> {
-	private Comparator<T> sorter;
-
-	public NodeUsageSorter (Comparator<T> sorter) {
-	    this.sorter = sorter;
-	}
-
-	public int compare (NodeUsage<T> n1, NodeUsage<T> n2) {
-	    return sorter.compare (n1.getData (), n2.getData ());
-	}
     }
 
     public <T, N> void buildLeafs (List<? extends T> ls, List<N> leafNodes,
@@ -97,15 +45,15 @@ class LeafBuilder {
 
 	Collections.sort (lsx, new NodeUsageSorter<T> (xSorter));
 	Collections.sort (lsy, new NodeUsageSorter<T> (ySorter));
-	List<ListHolder<T>> toExpand = new ArrayList<ListHolder<T>> ();
+	List<NodeGetter<T>> toExpand = new ArrayList<NodeGetter<T>> ();
 	ListData<T> listData = new ListData<T> (lsx, lsy);
 	int top = lsx.size () - 1;
-	toExpand.add (new ListHolder<T> (listData, listHolderId++, lsx.size (),
+	toExpand.add (new NodeGetter<T> (listData, listHolderId++, lsx.size (),
 					 0, 0, top, top));;
 	internalBuildLeafs (toExpand, leafNodes, nf);
     }
 
-    private class ListData<T> {
+    private static class ListData<T> {
 	// Same NodeUsage objects in both lists, just ordered differently.
 	public List<NodeUsage<T>> sx;
 	public List<NodeUsage<T>> sy;
@@ -116,7 +64,7 @@ class LeafBuilder {
 	}
     }
 
-    private class ListHolder<T> {
+    private class NodeGetter<T> {
 	private ListData<T> data;
 	private int taken = 0;
 	private int size;
@@ -127,7 +75,7 @@ class LeafBuilder {
 	private int xhigh;
 	private int yhigh;
 
-	public ListHolder (ListData<T> data, int id, int size,
+	public NodeGetter (ListData<T> data, int id, int size,
 			   int xlow, int ylow, int xhigh, int yhigh) {
 	    this.data = data;
 	    this.id = id;
@@ -198,7 +146,7 @@ class LeafBuilder {
 	/** Split the remaining data into two parts,
 	 *  one part with the low x values and one with the high x values.
 	 */
-	public List<ListHolder<T>> split () {
+	public List<NodeGetter<T>> split () {
 	    int e = elementsLeft ();
 	    int lowSize = (e + 1) / 2;
 	    int highSize = e - lowSize;
@@ -224,22 +172,22 @@ class LeafBuilder {
 		}
 	    }
 
-	    ListHolder<T> lhLow =
-		new ListHolder<T> (data, lowId, lowSize, xl, yl, xh, yh);
-	    ListHolder<T> lhHigh =
-		new ListHolder<T> (data, highId, highSize, xl, yl, xh, yh);
-	    List<ListHolder<T>> ret = new ArrayList<ListHolder<T>> (2);
+	    NodeGetter<T> lhLow =
+		new NodeGetter<T> (data, lowId, lowSize, xl, yl, xh, yh);
+	    NodeGetter<T> lhHigh =
+		new NodeGetter<T> (data, highId, highSize, xl, yl, xh, yh);
+	    List<NodeGetter<T>> ret = new ArrayList<NodeGetter<T>> (2);
 	    ret.add (lhLow);
 	    ret.add (lhHigh);
 	    return ret;
 	}
     }
 
-    private <T, N> void internalBuildLeafs (List<ListHolder<T>> toExpand,
+    private <T, N> void internalBuildLeafs (List<NodeGetter<T>> toExpand,
 					    List<N> leafNodes,
 					    NodeFactory<N, T> nf) {
 	while (!toExpand.isEmpty ()) {
-	    ListHolder<T> lh = toExpand.remove (0);
+	    NodeGetter<T> lh = toExpand.remove (0);
 	    if (lh.hasMoreData ())
 		leafNodes.add (getLowXNode (lh, nf));
 
@@ -253,43 +201,47 @@ class LeafBuilder {
 		leafNodes.add (getHighYNode (lh, nf));
 
 	    if (lh.hasMoreData ()) {
-		List<ListHolder<T>> splitted = lh.split ();
+		List<NodeGetter<T>> splitted = lh.split ();
 		toExpand.addAll (splitted);
 	    }
 	}
     }
 
-    private <T> int getNum (ListHolder<T> lh) {
+    private <T> int getNum (NodeGetter<T> lh) {
 	int s = lh.elementsLeft ();
 	if (s > branchFactor)
 	    return branchFactor;
 	return s;
     }
 
-    private <T, N> N getLowXNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
-	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++)
+    private <T, N> N getLowXNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
+	int s = getNum (lh);
+	N node = nf.create (s);
+	for (int i = 0; i < s; i++)
 	    nf.add (node, lh.getFirstUnusedX ());
 	return node;
     }
 
-    private <T, N> N getLowYNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
-	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++)
+    private <T, N> N getLowYNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
+	int s = getNum (lh);
+	N node = nf.create (s);
+	for (int i = 0; i < s; i++)
 	    nf.add (node, lh.getFirstUnusedY ());
 	return node;
     }
 
-    private <T, N> N getHighXNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
-	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++)
+    private <T, N> N getHighXNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
+	int s = getNum (lh);
+	N node = nf.create (s);
+	for (int i = 0; i < s; i++)
 	    nf.add (node, lh.getLastUnusedX ());
 	return node;
     }
 
-    private <T, N> N getHighYNode (ListHolder<T> lh, NodeFactory<N, T> nf) {
-	N node = nf.create ();
-	for (int i = 0, s = getNum (lh); i < s; i++)
+    private <T, N> N getHighYNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
+	int s = getNum (lh);
+	N node = nf.create (s);
+	for (int i = 0; i < s; i++)
 	    nf.add (node, lh.getLastUnusedY ());
 	return node;
     }

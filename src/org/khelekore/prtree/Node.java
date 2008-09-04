@@ -5,6 +5,9 @@ import java.util.List;
 /** A node in a Priority R-Tree
  */
 interface Node<T> {
+    /** Get the size of the node, that is how many data elements it holds */
+    int size ();
+    
     /** Get the MBR of this node */
     MBR getMBR ();
     
