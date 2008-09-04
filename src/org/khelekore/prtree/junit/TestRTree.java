@@ -76,12 +76,13 @@ public class TestRTree {
 
     @Test
     public void testMany () {
-	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (1000);
-	for (int i = 0; i < 1000000; i++)
+	int numRects = 1000000;
+	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
+	for (int i = 0; i < numRects; i++)
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
 	tree.load (rects);
 	int count = 0;
-	
+
 	// dx = 10, each rect is 10 so 20 in total
 	for (Rectangle2D r : tree.find (495, 495, 504.9, 504.9))
 	    count++;
