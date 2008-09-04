@@ -5,8 +5,11 @@ package org.khelekore.prtree;
  *  element of the tree is currently used.
  */
 class NodeUsage<T> {
+    /** The actual data of the node. */
     private T data;
+    /** The leaf node builder user id (split id). */
     private short user;
+    /** Flag to show if this node is used or not. */
     private boolean used;
 
     public NodeUsage (T data) {
