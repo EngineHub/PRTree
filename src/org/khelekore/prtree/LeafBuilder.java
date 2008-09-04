@@ -13,6 +13,7 @@ import java.util.List;
 class LeafBuilder {
 
     private int branchFactor;
+    private int listHolderId;
 
     public LeafBuilder (int branchFactor) {
 	this.branchFactor = branchFactor;
@@ -33,7 +34,8 @@ class LeafBuilder {
      */
     private static class NodeUsage<T> {
 	private T data;
-	private byte used = 0;
+	private short user;
+	private boolean used;
 
 	public NodeUsage (T data) {
 	    this.data = data;
@@ -44,33 +46,24 @@ class LeafBuilder {
 	}
 
 	public void use () {
-	    used = 1;
-	}
-
-	/** Use this node for the low part during splits */
-	public void useLow () {
-	    used = 2;
-	}
-
-	/** Use this node for the low part during splits */
-	public void useHigh () {
-	    used = 4;
-	}
-
-	public void clearUsage () {
-	    used = 0;
+	    used = true;
 	}
 
 	public boolean isUsed () {
-	    return used != 0;
+	    return used;
 	}
 
-	public boolean isUsedLow () {
-	    return used == 2;
+	public void setUser (int id) {
+	    user = (short)id;
 	}
 
-	public boolean isUsedHigh () {
-	    return used == 4;
+	public int getUser () {
+	    return (user & 0xffff);
+	}
+
+	@Override public String toString () {
+	    return getClass ().getSimpleName () + "{data: " + data +
+		", used: " + isUsed () + ", user: " + getUser () + "}";
 	}
     }
 
@@ -88,12 +81,24 @@ class LeafBuilder {
 	}
     }
 
-    public <T, N> void buildLeafs (List<T> ls, List<N> leafNodes,
+
+    private void qwertySleep (int time) {
+	try {
+	    System.out.println ("sleeping for " + time + " seconds");
+	    Thread.sleep (time * 1000);
+	} catch (InterruptedException e) {
+	    // ignore
+	}
+    }
+
+    public <T, N> void buildLeafs (List<? extends T> ls, List<N> leafNodes,
 				   Comparator<T> xSorter,
 				   Comparator<T> ySorter,
 				   NodeFactory<N, T> nf) {
+	listHolderId = 0;
 	List<NodeUsage<T>> lsx = new ArrayList<NodeUsage<T>> (ls.size ());
 	List<NodeUsage<T>> lsy = new ArrayList<NodeUsage<T>> (ls.size ());
+
 	for (T t : ls) {
 	    NodeUsage<T> nu = new NodeUsage<T> (t);
 	    lsx.add (nu);
@@ -103,25 +108,44 @@ class LeafBuilder {
 	Collections.sort (lsx, new NodeUsageSorter<T> (xSorter));
 	Collections.sort (lsy, new NodeUsageSorter<T> (ySorter));
 	List<ListHolder<T>> toExpand = new ArrayList<ListHolder<T>> ();
-	toExpand.add (new ListHolder<T> (lsx, lsy));
+	ListData<T> listData = new ListData<T> (lsx, lsy);
+	int top = lsx.size () - 1;
+	toExpand.add (new ListHolder<T> (listData, listHolderId++, lsx.size (),
+					 0, 0, top, top));;
 	internalBuildLeafs (toExpand, leafNodes, nf);
     }
 
-    private static class ListHolder<T> {
+    private class ListData<T> {
 	// Same NodeUsage objects in both lists, just ordered differently.
 	public List<NodeUsage<T>> sx;
 	public List<NodeUsage<T>> sy;
-	private int xlow = 0;
-	private int ylow = 0;
-	private int xhigh;
-	private int yhigh;
-	private int taken = 0;
 
-	public ListHolder (List<NodeUsage<T>> sx, List<NodeUsage<T>> sy) {
+	public ListData (List<NodeUsage<T>> sx, List<NodeUsage<T>> sy) {
 	    this.sx = sx;
 	    this.sy = sy;
-	    xhigh = sx.size () - 1;
-	    yhigh = xhigh;
+	}
+    }
+
+    private class ListHolder<T> {
+	private ListData<T> data;
+	private int taken = 0;
+	private int size;
+	private int id;
+
+	private int xlow;
+	private int ylow;
+	private int xhigh;
+	private int yhigh;
+
+	public ListHolder (ListData<T> data, int id, int size,
+			   int xlow, int ylow, int xhigh, int yhigh) {
+	    this.data = data;
+	    this.id = id;
+	    this.size = size;
+	    this.xlow = xlow;
+	    this.ylow = ylow;
+	    this.xhigh = xhigh;
+	    this.yhigh = yhigh;
 	}
 
 	public boolean hasMoreData () {
@@ -129,13 +153,18 @@ class LeafBuilder {
 	}
 
 	public int elementsLeft () {
-	    return sx.size () - taken;
+	    return size - taken;
+	}
+
+	private boolean isUsedNode (List<NodeUsage<T>> ls, int pos) {
+	    NodeUsage<T> nu = ls.get (pos);
+	    return nu.isUsed () || nu.getUser () != id;
 	}
 
 	private NodeUsage<T> getFirstUnusedXNode () {
-	    while (xlow < xhigh && sx.get (xlow).isUsed ())
+	    while (xlow < xhigh && isUsedNode (data.sx, xlow))
 		xlow++;
-	    return sx.get (xlow++);
+	    return data.sx.get (xlow++);
 	}
 
 	public T getFirstUnusedX () {
@@ -147,17 +176,17 @@ class LeafBuilder {
 
 	public T getFirstUnusedY () {
 	    taken++;
-	    while (ylow < yhigh && sy.get (ylow).isUsed ())
+	    while (ylow < yhigh && isUsedNode (data.sy, ylow))
 		ylow++;
-	    NodeUsage<T> nu = sy.get (ylow++);
+	    NodeUsage<T> nu = data.sy.get (ylow++);
 	    nu.use ();
 	    return nu.getData ();
 	}
 
 	private NodeUsage<T> getLastUnusedXNode () {
-	    while (xhigh > xlow && sx.get (xhigh).isUsed ())
+	    while (xhigh > xlow && isUsedNode (data.sx, xhigh))
 		xhigh--;
-	    return sx.get (xhigh--);
+	    return data.sx.get (xhigh--);
 	}
 
 	public T getLastUnusedX () {
@@ -169,9 +198,9 @@ class LeafBuilder {
 
 	public T getLastUnusedY () {
 	    taken++;
-	    while (yhigh > ylow && sy.get (yhigh).isUsed ())
+	    while (yhigh > ylow && isUsedNode (data.sy, yhigh))
 		yhigh--;
-	    NodeUsage<T> nu = sy.get (yhigh--);
+	    NodeUsage<T> nu = data.sy.get (yhigh--);
 	    nu.use ();
 	    return nu.getData ();
 	}
@@ -181,46 +210,34 @@ class LeafBuilder {
 	 */
 	public List<ListHolder<T>> split () {
 	    int e = elementsLeft ();
-	    int sizeLow = (e + 1) / 2;
-	    int sizeHigh = e - sizeLow;
-	    List<NodeUsage<T>> lowX = new ArrayList<NodeUsage<T>> (sizeLow);
-	    List<NodeUsage<T>> highX = new ArrayList<NodeUsage<T>> (sizeHigh);
+	    int lowSize = (e + 1) / 2;
+	    int highSize = e - lowSize;
+	    int lowId = listHolderId++;
+	    int highId = listHolderId++;
 
-	    // fill with null so that we can set it from the back later on.
-	    for (int i = 0; i < sizeHigh; i++)
-		highX.add (null);
+	    // save positions
+	    int xl = xlow;
+	    int yl = ylow;
+	    int xh = xhigh;
+	    int yh = yhigh;
 
 	    // pick a low element to the low list, mark as low,
 	    // pick a high element to the high list, mark as high
-	    int highPos = sizeHigh - 1;
 	    while (hasMoreData ()) {
 		taken++;
 		NodeUsage<T> nu = getFirstUnusedXNode ();
-		nu.useLow ();
-		lowX.add (nu);
+		nu.setUser (lowId);
 		if (hasMoreData ()) {
 		    taken++;
 		    nu = getLastUnusedXNode ();
-		    nu.useHigh ();
-		    highX.set (highPos--, nu);
+		    nu.setUser (highId);
 		}
 	    }
-	    sx = null;
-	    
-	    // split the Y-list using the usage markings
-	    List<NodeUsage<T>> lowY = new ArrayList<NodeUsage<T>> (sizeLow);
-	    List<NodeUsage<T>> highY = new ArrayList<NodeUsage<T>> (sizeHigh);
-	    for (NodeUsage<T> nu : sy) {
-		if (nu.isUsedLow ())
-		    lowY.add (nu);
-		else if (nu.isUsedHigh ())
-		    highY.add (nu);
-		nu.clearUsage ();
-	    }
-	    sy = null;
 
-	    ListHolder<T> lhLow = new ListHolder<T> (lowX, lowY);
-	    ListHolder<T> lhHigh = new ListHolder<T> (highX, highY);
+	    ListHolder<T> lhLow =
+		new ListHolder<T> (data, lowId, lowSize, xl, yl, xh, yh);
+	    ListHolder<T> lhHigh =
+		new ListHolder<T> (data, highId, highSize, xl, yl, xh, yh);
 	    List<ListHolder<T>> ret = new ArrayList<ListHolder<T>> (2);
 	    ret.add (lhLow);
 	    ret.add (lhHigh);

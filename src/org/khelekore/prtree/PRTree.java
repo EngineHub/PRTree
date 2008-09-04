@@ -24,47 +24,54 @@ public class PRTree<T> {
 	this.branchFactor = branchFactor;
     }
 
+    private int estimateSize (int dataSize) {
+	return (int)(1.0 / (branchFactor - 1) * dataSize);
+    }
+
     /** Bulk load data into this tree.
      * @param data the collection of data to store in the tree.
      */
-    public void load (Collection<? extends T> data) {
-	List<T> ls = new ArrayList<T> (data);
+    public void load (List<? extends T> data) {
 	OrdComparator<T> xSorter = new OrdComparator<T> (0, converter);
 	OrdComparator<T> ySorter = new OrdComparator<T> (1, converter);
-	List<LeafNode<T>> leafNodes = new ArrayList<LeafNode<T>> ();
+	List<LeafNode<T>> leafNodes =
+	    new ArrayList<LeafNode<T>> (estimateSize (data.size ()));
 	LeafBuilder lb = new LeafBuilder (branchFactor);
-	lb.buildLeafs (ls, leafNodes, xSorter, ySorter, new LeafNodeFactory ());
-	
+	lb.buildLeafs (data, leafNodes, xSorter, ySorter, new LeafNodeFactory ());
+
 	if (leafNodes.size () < branchFactor) {
 	    setRoot (leafNodes);
 	} else {
 	    NodeComparator<T> xs = new NodeComparator<T> (0);
 	    NodeComparator<T> ys = new NodeComparator<T> (1);
-	    List<Node<T>> nodes = new ArrayList<Node<T>> (leafNodes);
+	    List<? extends Node<T>> nodes = leafNodes;
 	    do {
-		List<InternalNode<T>> internalNodes = 
-		    new ArrayList<InternalNode<T>> ();
-		lb.buildLeafs (nodes, internalNodes, xs, ys, new InternalNodeFactory ());
-		nodes = new ArrayList<Node<T>> (internalNodes);
+		int es = estimateSize (nodes.size ());
+		List<InternalNode<T>> internalNodes =
+		    new ArrayList<InternalNode<T>> (es);
+		lb.buildLeafs (nodes, internalNodes, xs, ys,
+			       new InternalNodeFactory ());
+		nodes = internalNodes;
 	    } while (nodes.size () > branchFactor);
 	    setRoot (nodes);
 	}
     }
 
     /** Get a minimum bounding rectangle of the data stored in this tree.
-     */ 
+     */
     public MBR getMBR () {
 	return root.getMBR ();
     }
 
     private <N extends Node<T>> void setRoot (List<N> nodes) {
-	InternalNode<T> newRoot = new InternalNode<T> (nodes.size (), converter);
+	InternalNode<T> newRoot =
+	    new InternalNode<T> (nodes.size (), converter);
 	for (Node<T> n : nodes)
 	    newRoot.add (n);
 	root = newRoot;
     }
 
-    private class LeafNodeFactory 
+    private class LeafNodeFactory
 	implements LeafBuilder.NodeFactory<LeafNode<T>, T> {
 	public LeafNode<T> create () {
 	    return new LeafNode<T> (branchFactor, converter);
@@ -75,7 +82,7 @@ public class PRTree<T> {
 	}
     }
 
-    private class InternalNodeFactory 
+    private class InternalNodeFactory
 	implements LeafBuilder.NodeFactory<InternalNode<T>, Node<T>> {
 	public InternalNode<T> create () {
 	    return new InternalNode<T> (branchFactor, converter);
@@ -87,14 +94,16 @@ public class PRTree<T> {
     }
 
     /** Find all objects that intersect the given rectangle.
-     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax 
+     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
      */
     public Iterable<T> find (final double xmin, final double ymin,
 			     final double xmax, final double ymax) {
 	if (xmax < xmin)
-	    throw new IllegalArgumentException ("xmax: " + xmax + " < xmin: " + xmin);
+	    throw new IllegalArgumentException ("xmax: " + xmax +
+						" < xmin: " + xmin);
 	if (ymax < ymin)
-	    throw new IllegalArgumentException ("ymax: " + ymax + " < ymin: " + ymin);
+	    throw new IllegalArgumentException ("ymax: " + ymax +
+						" < ymin: " + ymin);
 	return new Iterable<T> () {
 	    public Iterator<T> iterator () {
 		return new Finder (xmin, ymin, xmax, ymax);
