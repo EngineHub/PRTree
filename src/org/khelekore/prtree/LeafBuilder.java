@@ -81,16 +81,6 @@ class LeafBuilder {
 	}
     }
 
-
-    private void qwertySleep (int time) {
-	try {
-	    System.out.println ("sleeping for " + time + " seconds");
-	    Thread.sleep (time * 1000);
-	} catch (InterruptedException e) {
-	    // ignore
-	}
-    }
-
     public <T, N> void buildLeafs (List<? extends T> ls, List<N> leafNodes,
 				   Comparator<T> xSorter,
 				   Comparator<T> ySorter,
