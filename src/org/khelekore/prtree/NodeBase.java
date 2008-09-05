@@ -1,14 +1,27 @@
 package org.khelekore.prtree;
 
-import java.util.ArrayList;
-
-abstract class NodeBase<N, T> extends ArrayList<N> implements Node<T> {
+abstract class NodeBase<N, T> implements Node<T> {
     private MBR mbr;
     private MBRConverter<T> converter;
-    
+    private Object[] data;
+    private int usage;
+
     public NodeBase (int size, MBRConverter<T> converter) {
-	super (size);
+	data = new Object[size];
 	this.converter = converter;
+    }
+
+    public void add (N n) {
+	data[usage++] = n;
+    }
+
+    public int size () {
+	return data.length;
+    }
+
+    @SuppressWarnings("unchecked")
+    public N get (int i) {
+	return (N)data[i];
     }
     
     public MBR getMBR () {
