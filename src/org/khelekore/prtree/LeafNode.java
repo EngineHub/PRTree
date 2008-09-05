@@ -9,14 +9,16 @@ class LeafNode<T> extends NodeBase<T, T> {
 
     @Override public MBR computeMBR () {
 	MBR ret = null;
-	for (T t : this)
-	    ret = getUnion (ret, getMBR (t));
+	for (int i = 0, s = size (); i < s; i++)
+	    ret = getUnion (ret, getMBR (get (i)));
 	return ret;
     }
 
     public void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand) {
-	for (T t : this)
+	for (int i = 0, s = size (); i < s; i++) {
+	    T  t = get (i);
 	    if (mbr.intersects (getMBR (t)))
 		found.add (t);
+	}
     }
 }

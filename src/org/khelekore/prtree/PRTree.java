@@ -1,7 +1,6 @@
 package org.khelekore.prtree;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -15,6 +14,8 @@ public class PRTree<T> {
     private int branchFactor;
 
     private Node<T> root;
+    private int numLeafs;
+    private int height;
 
     /** Create a new PRTree using the specified branch factor.
      * @param branchFactor the number of child nodes for each internal node.
@@ -30,15 +31,20 @@ public class PRTree<T> {
 
     /** Bulk load data into this tree.
      * @param data the collection of data to store in the tree.
+     * @throws IllegalStateException if the tree is already loaded
      */
     public void load (List<? extends T> data) {
+	if (root != null)
+	    throw new IllegalStateException ("Tree is already loaded");
+	numLeafs = data.size ();
 	OrdComparator<T> xSorter = new OrdComparator<T> (0, converter);
 	OrdComparator<T> ySorter = new OrdComparator<T> (1, converter);
 	List<LeafNode<T>> leafNodes =
-	    new ArrayList<LeafNode<T>> (estimateSize (data.size ()));
+	    new ArrayList<LeafNode<T>> (estimateSize (numLeafs));
 	LeafBuilder lb = new LeafBuilder (branchFactor);
 	lb.buildLeafs (data, leafNodes, xSorter, ySorter, new LeafNodeFactory ());
 
+	height = 1;
 	if (leafNodes.size () < branchFactor) {
 	    setRoot (leafNodes);
 	} else {
@@ -46,6 +52,7 @@ public class PRTree<T> {
 	    NodeComparator<T> ys = new NodeComparator<T> (1);
 	    List<? extends Node<T>> nodes = leafNodes;
 	    do {
+		height++;
 		int es = estimateSize (nodes.size ());
 		List<InternalNode<T>> internalNodes =
 		    new ArrayList<InternalNode<T>> (es);
@@ -62,13 +69,30 @@ public class PRTree<T> {
     public MBR getMBR () {
 	return root.getMBR ();
     }
+    
+    /** Get the number of data leafs in this tree. 
+     */
+    public int getNumberOfLeaves () {
+	return numLeafs;
+    }
+
+    /** Get the height of this tree. 
+     */
+    public int getHeight () {
+	return height;
+    }
 
     private <N extends Node<T>> void setRoot (List<N> nodes) {
-	InternalNode<T> newRoot =
-	    new InternalNode<T> (nodes.size (), converter);
-	for (Node<T> n : nodes)
-	    newRoot.add (n);
-	root = newRoot;
+	if (nodes.size () == 1) {
+	    root = nodes.get (0);
+	} else {
+	    height++;
+	    InternalNode<T> newRoot =
+		new InternalNode<T> (nodes.size (), converter);
+	    for (Node<T> n : nodes)
+		newRoot.add (n);
+	    root = newRoot;
+	}
     }
 
     private class LeafNodeFactory
@@ -118,6 +142,9 @@ public class PRTree<T> {
 	private List<Node<T>> toVisit;
 	private T next;
 
+	private int visitedNodes = 0;
+	private int dataNodesVisited = 0;
+
 	public Finder (double xmin, double ymin, double xmax, double ymax) {
 	    mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
 	    toVisit = new ArrayList<Node<T>> ();
@@ -138,12 +165,15 @@ public class PRTree<T> {
 	private void findNext () {
 	    while (ts.isEmpty () && !toVisit.isEmpty ()) {
 		Node<T> n = toVisit.remove (toVisit.size () - 1);
+		visitedNodes++;
 		n.expand (mbr, ts, toVisit);
 	    }
-	    if (ts.isEmpty ())
+	    if (ts.isEmpty ()) {
 		next = null;
-	    else
+	    } else {
 		next = ts.remove (ts.size () - 1);
+		dataNodesVisited++;
+	    }
 	}
 
 	public void remove () {

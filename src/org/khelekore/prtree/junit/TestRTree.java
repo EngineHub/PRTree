@@ -4,6 +4,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -74,12 +75,22 @@ public class TestRTree {
 	tree.find (0, 0, 1, -1);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testMultiLoad () {
+	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
+	tree.load (Collections.singletonList (rx));
+	tree.load (Collections.singletonList (rx));
+    }
+
     @Test
     public void testMany () {
 	int numRects = 1000000;
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
 	for (int i = 0; i < numRects; i++)
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
+	// shuffle, but make sure the shuffle is the same every time
+	Random random = new Random (4711);
+	Collections.shuffle (rects, random);
 	tree.load (rects);
 	int count = 0;
 
@@ -92,6 +103,28 @@ public class TestRTree {
 	for (Rectangle2D r : tree.find (1495, 495, 1504.9, 504.9))
 	    count++;
 	assertEquals ("should not find rectangles", 0, count);
+    }
+
+    @Test
+    public void testFindSpeed () {
+	int numRects = 100000;
+	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
+	for (int i = 0; i < numRects; i++)
+	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
+	tree.load (rects);
+	
+	System.out.println ("running speed test");
+	int count = 0;
+	int numRounds = 100000;
+	long start = System.nanoTime ();
+	for (int i = 0; i < numRounds; i++) {
+	    for (Rectangle2D r : tree.find (295, 295, 1504.9, 5504.9))
+		count++;
+	}
+	long end = System.nanoTime ();
+	long diff = end - start;
+	System.out.println ("finding took: " + (diff / 1000000) + " millis " + 
+			    "average: " + (diff / numRounds) + " nanos");
     }
 
     public static void main (String args[]) {

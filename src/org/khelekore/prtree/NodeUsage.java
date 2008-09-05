@@ -1,6 +1,5 @@
 package org.khelekore.prtree;
 
-
 /** Information needed to be able to figure out how an
  *  element of the tree is currently used.
  */

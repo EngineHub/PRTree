@@ -9,14 +9,16 @@ class InternalNode<T> extends NodeBase<Node<T>, T> {
     
     @Override public MBR computeMBR () {
 	MBR ret = null;
-	for (Node<T> n : this)
-	    ret = getUnion (ret, n.getMBR ());
+	for (int i = 0, s = size (); i < s; i++)
+	    ret = getUnion (ret, get (i).getMBR ());
 	return ret;
     }
     
     public void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand) {
-	for (Node<T> n : this)
+	for (int i = 0, s = size (); i < s; i++) {
+	    Node<T> n = get (i);
 	    if (mbr.intersects (n.getMBR ()))
 		nodesToExpand.add (n);
+	}
     }
 }
