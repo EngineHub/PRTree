@@ -156,7 +156,7 @@ public class PRTree<T> {
 	private MBR mbr;
 
 	private List<T> ts = new ArrayList<T> ();
-	private List<Node<T>> toVisit;
+	private List<Node<T>> toVisit = new ArrayList<Node<T>> ();
 	private T next;
 
 	private int visitedNodes = 0;
@@ -164,7 +164,6 @@ public class PRTree<T> {
 
 	public Finder (double xmin, double ymin, double xmax, double ymax) {
 	    mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
-	    toVisit = new ArrayList<Node<T>> ();
 	    toVisit.add (root);
 	    findNext ();
 	}
