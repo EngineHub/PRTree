@@ -21,4 +21,12 @@ class LeafNode<T> extends NodeBase<T, T> {
 		found.add (t);
 	}
     }
+
+    public void find (MBR mbr, List<T> result) {
+	for (int i = 0, s = size (); i < s; i++) {
+	    T  t = get (i);
+	    if (mbr.intersects (getMBR (t)))
+		result.add (t);
+	}
+    }
 }

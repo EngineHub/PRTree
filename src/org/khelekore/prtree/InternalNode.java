@@ -21,4 +21,12 @@ class InternalNode<T> extends NodeBase<Node<T>, T> {
 		nodesToExpand.add (n);
 	}
     }
+
+    public void find (MBR mbr, List<T> result) {
+	for (int i = 0, s = size (); i < s; i++) {
+	    Node<T> n = get (i);
+	    if (mbr.intersects (n.getMBR ()))
+		n.find (mbr, result);
+	}
+    }
 }

@@ -123,8 +123,24 @@ public class TestRTree {
 	}
 	long end = System.nanoTime ();
 	long diff = end - start;
-	System.out.println ("finding took: " + (diff / 1000000) + " millis " + 
-			    "average: " + (diff / numRounds) + " nanos");
+	System.out.println ("finding " + count + " took: " + (diff / 1000000) +
+			    " millis, average: " + (diff / numRounds) + 
+			    " nanos");
+
+	
+	count = 0;
+	start = System.nanoTime ();
+	for (int i = 0; i < numRounds; i++) {
+	    List<Rectangle2D> result = new ArrayList<Rectangle2D> (150);
+	    tree.find (295, 295, 1504.9, 5504.9, result);
+	    for (Rectangle2D r : result)
+		count++;
+	}
+	end = System.nanoTime ();
+	diff = end - start;
+	System.out.println ("finding " + count + " took: " + (diff / 1000000) +
+			    " millis, average: " + (diff / numRounds) + 
+			    " nanos");
     }
 
     public static void main (String args[]) {

@@ -1,5 +1,9 @@
 package org.khelekore.prtree;
 
+/**
+ * @param N the type of the child entries
+ * @param T the type of the data entries
+ */
 abstract class NodeBase<N, T> implements Node<T> {
     private MBR mbr;
     private MBRConverter<T> converter;

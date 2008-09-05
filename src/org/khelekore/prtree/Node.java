@@ -15,4 +15,8 @@ interface Node<T> {
      *  any child nodes to the list of nodes to expand.
      */
     void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand);
+    
+    /** Find nodes that intersect with the given MBR.
+     */
+    void find (MBR mbr, List<T> result);
 }

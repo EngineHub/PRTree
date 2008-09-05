@@ -117,17 +117,34 @@ public class PRTree<T> {
 	}
     }
 
-    /** Find all objects that intersect the given rectangle.
-     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
-     */
-    public Iterable<T> find (final double xmin, final double ymin,
-			     final double xmax, final double ymax) {
+    private void validateRect (final double xmin, final double ymin,
+			       final double xmax, final double ymax) {
 	if (xmax < xmin)
 	    throw new IllegalArgumentException ("xmax: " + xmax +
 						" < xmin: " + xmin);
 	if (ymax < ymin)
 	    throw new IllegalArgumentException ("ymax: " + ymax +
 						" < ymin: " + ymin);
+    }
+
+    /** Finds all objects that intersect the given rectangle and stores
+     *  the found node in the given list.
+     * @param resultNodes the list that will be filled with the result
+     */
+    public void find (final double xmin, final double ymin,
+		      final double xmax, final double ymax, 
+		      List<T> resultNodes) {
+	validateRect (xmin, ymin, xmax, ymax);
+	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
+	root.find (mbr, resultNodes);
+    }
+
+    /** Find all objects that intersect the given rectangle.
+     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
+     */
+    public Iterable<T> find (final double xmin, final double ymin,
+			     final double xmax, final double ymax) {
+	validateRect (xmin, ymin, xmax, ymax);
 	return new Iterable<T> () {
 	    public Iterator<T> iterator () {
 		return new Finder (xmin, ymin, xmax, ymax);
