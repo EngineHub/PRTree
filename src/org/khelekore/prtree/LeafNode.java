@@ -15,11 +15,7 @@ class LeafNode<T> extends NodeBase<T, T> {
     }
 
     public void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand) {
-	for (int i = 0, s = size (); i < s; i++) {
-	    T  t = get (i);
-	    if (mbr.intersects (getMBR (t)))
-		found.add (t);
-	}
+	find (mbr, found);
     }
 
     public void find (MBR mbr, List<T> result) {
