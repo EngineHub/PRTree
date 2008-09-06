@@ -16,6 +16,8 @@ public class SimpleMBR implements MBR {
 	this.ymax = ymax;
     }
 
+    /** Get a string representation of this mbr. 
+     */
     @Override public String toString () {
 	return getClass ().getSimpleName () +
 	    "{xmin: " + xmin + ", ymin: " + ymin +
