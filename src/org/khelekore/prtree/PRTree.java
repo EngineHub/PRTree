@@ -37,8 +37,8 @@ public class PRTree<T> {
 	if (root != null)
 	    throw new IllegalStateException ("Tree is already loaded");
 	numLeafs = data.size ();
-	OrdComparator<T> xSorter = new OrdComparator<T> (0, converter);
-	OrdComparator<T> ySorter = new OrdComparator<T> (1, converter);
+	XComparator<T> xSorter = new XComparator<T> (converter);
+	YComparator<T> ySorter = new YComparator<T> (converter);
 	List<LeafNode<T>> leafNodes =
 	    new ArrayList<LeafNode<T>> (estimateSize (numLeafs));
 	LeafBuilder lb = new LeafBuilder (branchFactor);
@@ -88,7 +88,7 @@ public class PRTree<T> {
 	} else {
 	    height++;
 	    InternalNode<T> newRoot =
-		new InternalNode<T> (nodes.size (), converter);
+		new InternalNode<T> (nodes.size ());
 	    for (Node<T> n : nodes)
 		newRoot.add (n);
 	    root = newRoot;
@@ -109,7 +109,7 @@ public class PRTree<T> {
     private class InternalNodeFactory
 	implements LeafBuilder.NodeFactory<InternalNode<T>, Node<T>> {
 	public InternalNode<T> create (int size) {
-	    return new InternalNode<T> (size, converter);
+	    return new InternalNode<T> (size);
 	}
 
 	public void add (InternalNode<T> node, Node<T> data) {

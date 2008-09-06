@@ -6,13 +6,11 @@ package org.khelekore.prtree;
  */
 abstract class NodeBase<N, T> implements Node<T> {
     private MBR mbr;
-    private MBRConverter<T> converter;
     private Object[] data;
     private int usage;
 
-    public NodeBase (int size, MBRConverter<T> converter) {
+    public NodeBase (int size) {
 	data = new Object[size];
-	this.converter = converter;
     }
 
     public void add (N n) {
@@ -32,13 +30,6 @@ abstract class NodeBase<N, T> implements Node<T> {
 	if (mbr == null)
 	    mbr = computeMBR ();
 	return mbr;
-    }
-    
-    public MBR getMBR (T t) {
-	return new SimpleMBR (converter.getMin (t, 0),
-			      converter.getMin (t, 1),
-			      converter.getMax (t, 0),
-			      converter.getMax (t, 1));
     }
     
     public abstract MBR computeMBR ();

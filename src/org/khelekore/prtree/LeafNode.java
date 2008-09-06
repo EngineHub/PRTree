@@ -3,10 +3,18 @@ package org.khelekore.prtree;
 import java.util.List;
 
 class LeafNode<T> extends NodeBase<T, T> {
+    private MBRConverter<T> converter;
+
     public LeafNode (int size, MBRConverter<T> converter) {
-	super (size, converter);
+	super (size);
+	this.converter = converter;
     }
 
+    public MBR getMBR (T t) {
+	return new SimpleMBR (converter.getMinX (t), converter.getMinY (t),
+			      converter.getMaxX (t), converter.getMaxY (t));
+    }
+    
     @Override public MBR computeMBR () {
 	MBR ret = null;
 	for (int i = 0, s = size (); i < s; i++)
@@ -21,7 +29,7 @@ class LeafNode<T> extends NodeBase<T, T> {
     public void find (MBR mbr, List<T> result) {
 	for (int i = 0, s = size (); i < s; i++) {
 	    T  t = get (i);
-	    if (mbr.intersects (getMBR (t)))
+	    if (mbr.intersects (t, converter))
 		result.add (t);
 	}
     }

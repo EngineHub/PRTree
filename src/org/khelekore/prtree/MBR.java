@@ -20,4 +20,9 @@ public interface MBR {
 
     /** Check if the other MBR intersects this one */
     boolean intersects (MBR other);
+
+    /** Check if this MBR intersects the rectangle given by the object 
+     *  and the MBRConverter.
+     */
+    <T> boolean intersects (T t, MBRConverter<T> converter);
 }

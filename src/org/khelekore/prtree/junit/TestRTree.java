@@ -22,14 +22,19 @@ public class TestRTree {
     }
 
     private class Rectangle2DConverter implements MBRConverter<Rectangle2D> {
-	public double getMin (Rectangle2D t, int ordinate) {
-	    if (ordinate == 0)
-		return t.getMinX ();
+	public double getMinX (Rectangle2D t) {
+	    return t.getMinX ();
+	}
+
+	public double getMinY (Rectangle2D t) {
 	    return t.getMinY ();
 	}
-	public double getMax (Rectangle2D t, int ordinate) {
-	    if (ordinate == 0)
-		return t.getMaxX ();
+
+	public double getMaxX (Rectangle2D t) {
+	    return t.getMaxX ();
+	}
+
+	public double getMaxY (Rectangle2D t) {
 	    return t.getMaxY ();
 	}
     }
