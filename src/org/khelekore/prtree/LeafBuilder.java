@@ -23,10 +23,7 @@ class LeafBuilder {
      */
     public interface NodeFactory<N, T> {
 	/** Create a new node */
-	N create (int size);
-
-	/** Add a data element to the node */
-	void add (N node, T data);
+	N create (Object[] data);
     }
 
     public <T, N> void buildLeafs (List<? extends T> ls, List<N> leafNodes,
@@ -216,33 +213,33 @@ class LeafBuilder {
 
     private <T, N> N getLowXNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
 	int s = getNum (lh);
-	N node = nf.create (s);
+	Object[] data = new Object[s];
 	for (int i = 0; i < s; i++)
-	    nf.add (node, lh.getFirstUnusedX ());
-	return node;
+	    data[i] = lh.getFirstUnusedX ();
+	return nf.create (data);
     }
 
     private <T, N> N getLowYNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
 	int s = getNum (lh);
-	N node = nf.create (s);
+	Object[] data = new Object[s];
 	for (int i = 0; i < s; i++)
-	    nf.add (node, lh.getFirstUnusedY ());
-	return node;
+	    data[i] = lh.getFirstUnusedY ();
+	return nf.create (data);
     }
 
     private <T, N> N getHighXNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
 	int s = getNum (lh);
-	N node = nf.create (s);
+	Object[] data = new Object[s];
 	for (int i = 0; i < s; i++)
-	    nf.add (node, lh.getLastUnusedX ());
-	return node;
+	    data[i] = lh.getLastUnusedX ();
+	return nf.create (data);
     }
 
     private <T, N> N getHighYNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
 	int s = getNum (lh);
-	N node = nf.create (s);
+	Object[] data = new Object[s];
 	for (int i = 0; i < s; i++)
-	    nf.add (node, lh.getLastUnusedY ());
-	return node;
+	    data[i] = lh.getLastUnusedY ();
+	return nf.create (data);
     }
 }

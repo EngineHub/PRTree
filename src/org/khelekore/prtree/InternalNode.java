@@ -3,8 +3,8 @@ package org.khelekore.prtree;
 import java.util.List;
 
 class InternalNode<T> extends NodeBase<Node<T>, T> {
-    public InternalNode (int size) {
-	super (size);
+    public InternalNode (Object[] data) {
+	super (data);
     }
     
     @Override public MBR computeMBR () {

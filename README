@@ -1,1 +1,15 @@
-Prtree is a Priority R-Tree, a spatial index.
+PRTree is a Priority R-Tree, a spatial index.
+
+PRTree is written to be fast and use as little memory aspossible. 
+
+The source for org.khelekore.prtree.junit.TestRTree has a few examples
+of setting up and querying a PRTree.
+
+Basic usage goes something like this: 
+    PRTree<Rectangle2D> tree = 
+        new PRTree<Rectangle2D> (new Rectangle2DConverter (), 10);
+    Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
+    tree.load (Collections.singletonList (rx));
+    for (Rectangle2D r : tree.find (0, 0, 1, 1)) {
+        System.out.println ("found a rectangle: " + r);
+    }

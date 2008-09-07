@@ -6,7 +6,18 @@ import java.util.List;
 
 /** A Priority R-Tree, a spatial index.
  *  This tree only supports bulk loading.
- * @param T the data type stored in the PRTree
+ *
+ *  <pre>{@code
+ *  PRTree<Rectangle2D> tree = 
+ *      new PRTree<Rectangle2D> (new Rectangle2DConverter (), 10);
+ *  Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
+ *  tree.load (Collections.singletonList (rx));
+ *  for (Rectangle2D r : tree.find (0, 0, 1, 1)) {
+ *      System.out.println ("found a rectangle: " + r);
+ *  }
+ *  }</pre>
+ * 
+ * @param <T> the data type stored in the PRTree
  */
 public class PRTree<T> {
 
@@ -87,33 +98,21 @@ public class PRTree<T> {
 	    root = nodes.get (0);
 	} else {
 	    height++;
-	    InternalNode<T> newRoot =
-		new InternalNode<T> (nodes.size ());
-	    for (Node<T> n : nodes)
-		newRoot.add (n);
-	    root = newRoot;
+	    root = new InternalNode<T> (nodes.toArray ());
 	}
     }
 
     private class LeafNodeFactory
 	implements LeafBuilder.NodeFactory<LeafNode<T>, T> {
-	public LeafNode<T> create (int size) {
-	    return new LeafNode<T> (size, converter);
-	}
-
-	public void add (LeafNode<T> node, T data) {
-	    node.add (data);
+	public LeafNode<T> create (Object[] data) {
+	    return new LeafNode<T> (data, converter);
 	}
     }
 
     private class InternalNodeFactory
 	implements LeafBuilder.NodeFactory<InternalNode<T>, Node<T>> {
-	public InternalNode<T> create (int size) {
-	    return new InternalNode<T> (size);
-	}
-
-	public void add (InternalNode<T> node, Node<T> data) {
-	    node.add (data);
+	public InternalNode<T> create (Object[] data) {
+	    return new InternalNode<T> (data);
 	}
     }
 

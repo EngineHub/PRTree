@@ -5,8 +5,8 @@ import java.util.List;
 class LeafNode<T> extends NodeBase<T, T> {
     private MBRConverter<T> converter;
 
-    public LeafNode (int size, MBRConverter<T> converter) {
-	super (size);
+    public LeafNode (Object[] data, MBRConverter<T> converter) {
+	super (data);
 	this.converter = converter;
     }
 

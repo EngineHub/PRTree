@@ -7,14 +7,9 @@ package org.khelekore.prtree;
 abstract class NodeBase<N, T> implements Node<T> {
     private MBR mbr;
     private Object[] data;
-    private int usage;
 
-    public NodeBase (int size) {
-	data = new Object[size];
-    }
-
-    public void add (N n) {
-	data[usage++] = n;
+    public NodeBase (Object[] data) {
+	this.data = data;
     }
 
     public int size () {
