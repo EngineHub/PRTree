@@ -37,7 +37,7 @@ public class SimpleMBR implements MBR {
     }
 
     public double getMaxY () {
-	return xmax;
+	return ymax;
     }
 
     public MBR union (MBR other) {
