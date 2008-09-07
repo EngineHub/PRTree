@@ -139,9 +139,18 @@ public class PRTree<T> {
      */
     public void find (double xmin, double ymin, double xmax, double ymax, 
 		      List<T> resultNodes) {
-	validateRect (xmin, ymin, xmax, ymax);
 	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
-	root.find (mbr, resultNodes);
+	find (mbr, resultNodes);
+    }
+
+    /** Finds all objects that intersect the given rectangle and stores
+     *  the found node in the given list.
+     * @param resultNodes the list that will be filled with the result
+     */
+    public void find (MBR query, List<T> resultNodes) {
+	validateRect (query.getMinX (), query.getMinY (), 
+		      query.getMaxX (), query.getMaxY ());
+	root.find (query, resultNodes);
     }
 
     /** Find all objects that intersect the given rectangle.
