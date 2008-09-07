@@ -11,14 +11,17 @@ import org.junit.runner.JUnitCore;
 import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.MBRConverter;
 import org.khelekore.prtree.PRTree;
+import org.khelekore.prtree.SimpleMBR;
+
 import static org.junit.Assert.*;
 
 public class TestRTree {
+    private Rectangle2DConverter converter = new Rectangle2DConverter ();
     private PRTree<Rectangle2D> tree;
 
     @Before
     public void setUp() {
-	tree = new PRTree<Rectangle2D> (new Rectangle2DConverter (), 10);
+	tree = new PRTree<Rectangle2D> (converter, 10);
     }
 
     private class Rectangle2DConverter implements MBRConverter<Rectangle2D> {
@@ -90,9 +93,20 @@ public class TestRTree {
     @Test
     public void testMany () {
 	int numRects = 1000000;
+	MBR queryInside = new SimpleMBR (495, 495, 504.9, 504.9);
+	MBR queryOutside = new SimpleMBR (1495, 495, 1504.9, 504.9);
+	int shouldFindInside = 0;
+	int shouldFindOutside = 0;
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
-	for (int i = 0; i < numRects; i++)
-	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
+	for (int i = 0; i < numRects; i++) {
+	    Rectangle2D r = new Rectangle2D.Double (i, i, 10, 10);
+	    if (queryInside.intersects (r, converter)) 
+		shouldFindInside++;
+	    if (queryOutside.intersects (r, converter)) 
+		shouldFindOutside++;
+	    rects.add (r);
+	}
+
 	// shuffle, but make sure the shuffle is the same every time
 	Random random = new Random (4711);
 	Collections.shuffle (rects, random);
@@ -100,14 +114,15 @@ public class TestRTree {
 	int count = 0;
 
 	// dx = 10, each rect is 10 so 20 in total
-	for (Rectangle2D r : tree.find (495, 495, 504.9, 504.9))
+	for (Rectangle2D r : tree.find (queryInside)) 
 	    count++;
-	assertEquals ("should find some rectangles", 20, count);
+	assertEquals ("should find some rectangles", shouldFindInside, count);
 
 	count = 0;
-	for (Rectangle2D r : tree.find (1495, 495, 1504.9, 504.9))
+	for (Rectangle2D r : tree.find (queryOutside))
 	    count++;
-	assertEquals ("should not find rectangles", 0, count);
+
+	assertEquals ("should not find rectangles", shouldFindOutside, count);
     }
 
     @Test
