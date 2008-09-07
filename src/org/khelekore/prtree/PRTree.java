@@ -130,8 +130,7 @@ public class PRTree<T> {
      *  the found node in the given list.
      * @param resultNodes the list that will be filled with the result
      */
-    public void find (final double xmin, final double ymin,
-		      final double xmax, final double ymax, 
+    public void find (double xmin, double ymin, double xmax, double ymax, 
 		      List<T> resultNodes) {
 	validateRect (xmin, ymin, xmax, ymax);
 	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
@@ -141,14 +140,23 @@ public class PRTree<T> {
     /** Find all objects that intersect the given rectangle.
      * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
      */
-    public Iterable<T> find (final double xmin, final double ymin,
-			     final double xmax, final double ymax) {
-	validateRect (xmin, ymin, xmax, ymax);
+    public Iterable<T> find (final MBR query) {
+	validateRect (query.getMinX (), query.getMinY (), 
+		      query.getMaxX (), query.getMaxY ());
 	return new Iterable<T> () {
 	    public Iterator<T> iterator () {
-		return new Finder (xmin, ymin, xmax, ymax);
+		return new Finder (query);
 	    }
 	};
+    }
+
+    /** Find all objects that intersect the given rectangle.
+     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
+     */
+    public Iterable<T> find (double xmin, double ymin, 
+			     double xmax, double ymax) {
+	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
+	return find (mbr);
     }
 
     private class Finder implements Iterator<T> {
@@ -161,8 +169,8 @@ public class PRTree<T> {
 	private int visitedNodes = 0;
 	private int dataNodesVisited = 0;
 
-	public Finder (double xmin, double ymin, double xmax, double ymax) {
-	    mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
+	public Finder (MBR mbr) {
+	    this.mbr = mbr;
 	    toVisit.add (root);
 	    findNext ();
 	}
