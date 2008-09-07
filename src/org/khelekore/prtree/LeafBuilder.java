@@ -21,15 +21,21 @@ class LeafBuilder {
 
     /** A factory that creates the nodes (either leaf or internal).
      */
-    public interface NodeFactory<N, T> {
-	/** Create a new node */
+    public interface NodeFactory<N> {
+	/** Create a new node 
+	 * @param data the data entries for the node, fully filled.
+	 */
 	N create (Object[] data);
     }
 
     public <T, N> void buildLeafs (List<? extends T> ls, List<N> leafNodes,
 				   Comparator<T> xSorter,
 				   Comparator<T> ySorter,
-				   NodeFactory<N, T> nf) {
+				   NodeFactory<N> nf) {
+	/** To not waste so much memory we create two lists, sorted by xmin 
+	 *  and ymin respectivly. The two lists hold the same objects so we
+	 *  can modify the usage info from either list.
+	 */
 	listHolderId = 0;
 	List<NodeUsage<T>> lsx = new ArrayList<NodeUsage<T>> (ls.size ());
 	List<NodeUsage<T>> lsy = new ArrayList<NodeUsage<T>> (ls.size ());
@@ -67,11 +73,21 @@ class LeafBuilder {
 	private int size;
 	private int id;
 
-	private int xlow;
+	// indexes for list scanning
+	private int xlow;  // goes up as we pick low nodes
 	private int ylow;
-	private int xhigh;
+	private int xhigh; // goes down as we pick high nodes
 	private int yhigh;
 
+	/** 
+	 * @param data the lists to grab node data from
+	 * @param id the id of the nodes we may pick
+	 * @param size the number of nodes we may pick
+	 * @param xlow the lower start index for the x list 
+	 * @param ylow the lower start index for the x list
+	 * @param xhigh the upper start index for the x list
+	 * @param yhigh the upper start index for the x list
+	 */
 	public NodeGetter (ListData<T> data, int id, int size,
 			   int xlow, int ylow, int xhigh, int yhigh) {
 	    this.data = data;
@@ -152,9 +168,7 @@ class LeafBuilder {
 
 	    // save positions
 	    int xl = xlow;
-	    int yl = ylow;
 	    int xh = xhigh;
-	    int yh = yhigh;
 
 	    // pick a low element to the low list, mark as low,
 	    // pick a high element to the high list, mark as high
@@ -170,9 +184,11 @@ class LeafBuilder {
 	    }
 
 	    NodeGetter<T> lhLow =
-		new NodeGetter<T> (data, lowId, lowSize, xl, yl, xh, yh);
+		new NodeGetter<T> (data, lowId, lowSize, 
+				   xl, ylow, xhigh, yhigh);
 	    NodeGetter<T> lhHigh =
-		new NodeGetter<T> (data, highId, highSize, xl, yl, xh, yh);
+		new NodeGetter<T> (data, highId, highSize, 
+				   xlow, ylow, xh, yhigh);
 	    List<NodeGetter<T>> ret = new ArrayList<NodeGetter<T>> (2);
 	    ret.add (lhLow);
 	    ret.add (lhHigh);
@@ -180,9 +196,12 @@ class LeafBuilder {
 	}
     }
 
+    /** Construct the four edge nodes then split the rests of the nodes 
+     *  in the middle and loop with the two middle sets.
+     */
     private <T, N> void internalBuildLeafs (List<NodeGetter<T>> toExpand,
 					    List<N> leafNodes,
-					    NodeFactory<N, T> nf) {
+					    NodeFactory<N> nf) {
 	while (!toExpand.isEmpty ()) {
 	    NodeGetter<T> lh = toExpand.remove (0);
 	    if (lh.hasMoreData ())
@@ -204,41 +223,37 @@ class LeafBuilder {
 	}
     }
 
+    /** Get the size of the node we are about to create, 
+     *  limit by elements left and by branchfactor
+     */
     private <T> int getNum (NodeGetter<T> lh) {
-	int s = lh.elementsLeft ();
-	if (s > branchFactor)
-	    return branchFactor;
-	return s;
+	return Math.min (lh.elementsLeft (), branchFactor);
     }
 
-    private <T, N> N getLowXNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
-	int s = getNum (lh);
-	Object[] data = new Object[s];
-	for (int i = 0; i < s; i++)
+    private <T, N> N getLowXNode (NodeGetter<T> lh, NodeFactory<N> nf) {
+	Object[] data = new Object[getNum (lh)];
+	for (int i = 0; i < data.length; i++)
 	    data[i] = lh.getFirstUnusedX ();
 	return nf.create (data);
     }
 
-    private <T, N> N getLowYNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
-	int s = getNum (lh);
-	Object[] data = new Object[s];
-	for (int i = 0; i < s; i++)
+    private <T, N> N getLowYNode (NodeGetter<T> lh, NodeFactory<N> nf) {
+	Object[] data = new Object[getNum (lh)];
+	for (int i = 0; i < data.length; i++)
 	    data[i] = lh.getFirstUnusedY ();
 	return nf.create (data);
     }
 
-    private <T, N> N getHighXNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
-	int s = getNum (lh);
-	Object[] data = new Object[s];
-	for (int i = 0; i < s; i++)
+    private <T, N> N getHighXNode (NodeGetter<T> lh, NodeFactory<N> nf) {
+	Object[] data = new Object[getNum (lh)];
+	for (int i = 0; i < data.length; i++)
 	    data[i] = lh.getLastUnusedX ();
 	return nf.create (data);
     }
 
-    private <T, N> N getHighYNode (NodeGetter<T> lh, NodeFactory<N, T> nf) {
-	int s = getNum (lh);
-	Object[] data = new Object[s];
-	for (int i = 0; i < s; i++)
+    private <T, N> N getHighYNode (NodeGetter<T> lh, NodeFactory<N> nf) {
+	Object[] data = new Object[getNum (lh)];
+	for (int i = 0; i < data.length; i++)
 	    data[i] = lh.getLastUnusedY ();
 	return nf.create (data);
     }

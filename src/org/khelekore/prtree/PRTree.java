@@ -110,14 +110,14 @@ public class PRTree<T> {
     }
 
     private class LeafNodeFactory
-	implements LeafBuilder.NodeFactory<LeafNode<T>, T> {
+	implements LeafBuilder.NodeFactory<LeafNode<T>> {
 	public LeafNode<T> create (Object[] data) {
 	    return new LeafNode<T> (data, converter);
 	}
     }
 
     private class InternalNodeFactory
-	implements LeafBuilder.NodeFactory<InternalNode<T>, Node<T>> {
+	implements LeafBuilder.NodeFactory<InternalNode<T>> {
 	public InternalNode<T> create (Object[] data) {
 	    return new InternalNode<T> (data);
 	}
