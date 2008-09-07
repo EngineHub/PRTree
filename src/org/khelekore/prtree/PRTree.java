@@ -41,6 +41,11 @@ public class PRTree<T> {
     }
 
     /** Bulk load data into this tree.
+     *
+     *  Create the leaf nodes that each hold (up to) branchFactor data entries.
+     *  Then use the leaf nodes as data until we can fit all nodes into 
+     *  the root node.
+     *
      * @param data the collection of data to store in the tree.
      * @throws IllegalStateException if the tree is already loaded
      */
@@ -94,7 +99,9 @@ public class PRTree<T> {
     }
 
     private <N extends Node<T>> void setRoot (List<N> nodes) {
-	if (nodes.size () == 1) {
+	if (nodes.size () == 0)
+	    root = new InternalNode<T> (new Object[0]);
+	else if (nodes.size () == 1) {
 	    root = nodes.get (0);
 	} else {
 	    height++;

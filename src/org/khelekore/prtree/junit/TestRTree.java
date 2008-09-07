@@ -48,6 +48,7 @@ public class TestRTree {
 	for (Rectangle2D r : tree.find (0, 0, 1, 1))
 	    fail ("should not get any results");
 	assertNull ("mbr of empty tress should be null", tree.getMBR ());
+	assertEquals ("height of empty tree", 1, tree.getHeight ());
     }
 
     @Test
@@ -59,6 +60,7 @@ public class TestRTree {
 	assertEquals ("odd min for mbr", 0, mbr.getMinY (), 0);
 	assertEquals ("odd max for mbr", 1, mbr.getMaxX (), 0);
 	assertEquals ("odd max for mbr", 1, mbr.getMaxY (), 0);
+	assertEquals ("height of tree with one entry", 1, tree.getHeight ());
 	int count = 0;
 	for (Rectangle2D r : tree.find (0, 0, 1, 1)) {
 	    assertEquals ("odd rectangle returned", rx, r);
@@ -88,6 +90,17 @@ public class TestRTree {
 	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
 	tree.load (Collections.singletonList (rx));
 	tree.load (Collections.singletonList (rx));
+    }
+
+    @Test
+    public void testHeight () {
+	int numRects = 11;  // root and below it we have two leaf nodes 
+	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
+	for (int i = 0; i < numRects; i++) {
+	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
+	}
+	tree.load (rects);
+	assertEquals ("height of tree", 2, tree.getHeight ());
     }
 
     @Test
