@@ -24,35 +24,33 @@ public class SimpleMBR implements MBR {
 	    ", xmax: " + xmax + ", ymax: " + ymax + "}";
     }
 
-    public double getMin (int ordinate) {
-	if (ordinate == 0)
-	    return xmin;
-	if (ordinate == 1)
-	    return ymin;
-	throw new IllegalArgumentException ("not able to get ordinate; " +
-					    ordinate);
+    public double getMinX () {
+	return xmin;
     }
 
-    public double getMax (int ordinate) {
-	if (ordinate == 0)
-	    return xmax;
-	if (ordinate == 1)
-	    return ymax;
-	throw new IllegalArgumentException ("not able to get ordinate; " +
-					    ordinate);
+    public double getMinY () {
+	return ymin;
+    }
+
+    public double getMaxX () {
+	return xmax;
+    }
+
+    public double getMaxY () {
+	return xmax;
     }
 
     public MBR union (MBR other) {
-	double uxmin = Math.min (xmin, other.getMin (0));
-	double uymin = Math.min (ymin, other.getMin (1));
-	double uxmax = Math.max (xmax, other.getMax (0));
-	double uymax = Math.max (ymax, other.getMax (1));
+	double uxmin = Math.min (xmin, other.getMinX ());
+	double uymin = Math.min (ymin, other.getMinY ());
+	double uxmax = Math.max (xmax, other.getMaxX ());
+	double uymax = Math.max (ymax, other.getMaxY ());
 	return new SimpleMBR (uxmin, uymin, uxmax, uymax);
     }
 
     public boolean intersects (MBR other) {
-	return !(other.getMax (0) < xmin || other.getMin (0) > xmax ||
-		 other.getMax (1) < ymin || other.getMin (1) > ymax);
+	return !(other.getMaxX () < xmin || other.getMinX () > xmax ||
+		 other.getMaxY () < ymin || other.getMinY () > ymax);
     }
 
     public <T> boolean intersects (T t, MBRConverter<T> converter) {

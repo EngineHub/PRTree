@@ -52,10 +52,10 @@ public class TestRTree {
 	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
 	tree.load (Collections.singletonList (rx));
 	MBR mbr = tree.getMBR ();
-	assertEquals ("odd min for mbr", 0, mbr.getMin (0), 0);
-	assertEquals ("odd min for mbr", 0, mbr.getMin (1), 0);
-	assertEquals ("odd max for mbr", 1, mbr.getMax (0), 0);
-	assertEquals ("odd max for mbr", 1, mbr.getMax (1), 0);
+	assertEquals ("odd min for mbr", 0, mbr.getMinX (), 0);
+	assertEquals ("odd min for mbr", 0, mbr.getMinY (), 0);
+	assertEquals ("odd max for mbr", 1, mbr.getMaxX (), 0);
+	assertEquals ("odd max for mbr", 1, mbr.getMaxY (), 0);
 	int count = 0;
 	for (Rectangle2D r : tree.find (0, 0, 1, 1)) {
 	    assertEquals ("odd rectangle returned", rx, r);

@@ -59,8 +59,8 @@ public class PRTree<T> {
 	if (leafNodes.size () < branchFactor) {
 	    setRoot (leafNodes);
 	} else {
-	    NodeComparator<T> xs = new NodeComparator<T> (0);
-	    NodeComparator<T> ys = new NodeComparator<T> (1);
+	    XNodeComparator<T> xs = new XNodeComparator<T> ();
+	    YNodeComparator<T> ys = new YNodeComparator<T> ();
 	    List<? extends Node<T>> nodes = leafNodes;
 	    do {
 		height++;

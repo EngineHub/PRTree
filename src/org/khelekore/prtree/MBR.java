@@ -3,15 +3,17 @@ package org.khelekore.prtree;
 /** A minimum bounding rectangle
  */ 
 public interface MBR {
-    /** Get the minimum value in the given ordinate.
-     * @param ordinate the coordinate position (0, 1, 2, ...).
-     */
-    double getMin (int ordinate);
+    /** Get the minimum x value */
+    double getMinX ();
 
-    /** Get the maximum value in the given ordinate
-     * @param ordinate the coordinate position (0, 1, 2, ...).
-     */
-    double getMax (int ordinate);
+    /** Get the minimum y value */
+    double getMinY ();
+
+    /** Get the maximum x value */
+    double getMaxX ();
+
+    /** Get the maximum y value */
+    double getMaxY ();
 
     /** Return a new MBR that is the union of this mbr and the other 
      * @param mbr the MBR to create a union with
