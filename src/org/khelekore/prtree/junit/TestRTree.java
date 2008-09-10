@@ -144,9 +144,14 @@ public class TestRTree {
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
 	for (int i = 0; i < numRects; i++)
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
-	tree.load (rects);
 	
 	System.out.println ("running speed test");
+	tree.load (rects);
+	testFindSpeedIterator ();
+	testFindSpeedArray ();
+    }
+
+    private void testFindSpeedIterator () {
 	int count = 0;
 	int numRounds = 100000;
 	long start = System.nanoTime ();
@@ -159,22 +164,34 @@ public class TestRTree {
 	System.out.println ("finding " + count + " took: " + (diff / 1000000) +
 			    " millis, average: " + (diff / numRounds) + 
 			    " nanos");
-
 	
-	count = 0;
-	start = System.nanoTime ();
+    }
+    
+    private void testFindSpeedArray () {
+ 	int count = 0;
+	int numRounds = 100000;
+	long start = System.nanoTime ();
 	for (int i = 0; i < numRounds; i++) {
 	    List<Rectangle2D> result = new ArrayList<Rectangle2D> (150);
 	    tree.find (295, 295, 1504.9, 5504.9, result);
 	    for (Rectangle2D r : result)
 		count++;
 	}
-	end = System.nanoTime ();
-	diff = end - start;
+	long end = System.nanoTime ();
+	long diff = end - start;
 	System.out.println ("finding " + count + " took: " + (diff / 1000000) +
 			    " millis, average: " + (diff / numRounds) + 
 			    " nanos");
+	
     }
+
+    private void testFindSpeed (int round, int branchFactor, 
+				List<Rectangle2D> rects) {
+	System.out.print (round + ":" + branchFactor + ": ");
+	tree = new PRTree<Rectangle2D> (converter, branchFactor);
+	tree.load (rects);
+	testFindSpeedIterator ();
+   }
 
     public static void main (String args[]) {
 	JUnitCore.main (TestRTree.class.getName ());
