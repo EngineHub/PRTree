@@ -7,9 +7,7 @@ class NodeUsage<T> {
     /** The actual data of the node. */
     private T data;
     /** The leaf node builder user id (split id). */
-    private short user;
-    /** Flag to show if this node is used or not. */
-    private boolean used;
+    private int usage = 1;
 
     public NodeUsage (T data) {
 	this.data = data;
@@ -20,19 +18,24 @@ class NodeUsage<T> {
     }
 
     public void use () {
-	used = true;
+	if (usage >= 0)
+	    usage = -usage;
+	else 
+	    throw new RuntimeException ("using already used node");
     }
 
     public boolean isUsed () {
-	return used;
+	return usage < 0;
     }
 
     public void setUser (int id) {
-	user = (short)id;
+	if (id < 0)
+	    throw new IllegalArgumentException ("id must be positive");
+	usage = id;
     }
 
     public int getUser () {
-	return (user & 0xffff);
+	return Math.abs (usage);
     }
 
     @Override public String toString () {

@@ -36,7 +36,7 @@ class LeafBuilder {
 	 *  and ymin respectivly. The two lists hold the same objects so we
 	 *  can modify the usage info from either list.
 	 */
-	listHolderId = 0;
+	listHolderId = 1;
 	List<NodeUsage<T>> lsx = new ArrayList<NodeUsage<T>> (ls.size ());
 	List<NodeUsage<T>> lsy = new ArrayList<NodeUsage<T>> (ls.size ());
 
@@ -64,6 +64,11 @@ class LeafBuilder {
 	public ListData (List<NodeUsage<T>> sx, List<NodeUsage<T>> sy) {
 	    this.sx = sx;
 	    this.sy = sy;
+	}
+	
+	@Override public String toString () {
+	    return getClass ().getSimpleName () + 
+		"{sx: " + sx + ", sy: " + sy + "}";
 	}
     }
 
@@ -97,6 +102,13 @@ class LeafBuilder {
 	    this.ylow = ylow;
 	    this.xhigh = xhigh;
 	    this.yhigh = yhigh;
+	}
+
+	@Override public String toString () {
+	    return getClass ().getSimpleName () + "{taken: " + taken +
+		", size: " + size + ", id: " + id + ", xlow: " + xlow +
+		", ylow: " + ylow + ", xhigh: " + xhigh + ", yhigh: " + 
+		yhigh + ", data: " + data + "}";
 	}
 
 	public boolean hasMoreData () {
