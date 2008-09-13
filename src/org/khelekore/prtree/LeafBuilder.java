@@ -121,7 +121,7 @@ class LeafBuilder {
 
 	private boolean isUsedNode (List<NodeUsage<T>> ls, int pos) {
 	    NodeUsage<T> nu = ls.get (pos);
-	    return nu.isUsed () || nu.getUser () != id;
+	    return nu == null || nu.isUsed () || nu.getUser () != id;
 	}
 
 	private NodeUsage<T> getFirstUnusedXNode () {
@@ -134,6 +134,7 @@ class LeafBuilder {
 	    taken++;
 	    NodeUsage<T> nu = getFirstUnusedXNode ();
 	    nu.use ();
+	    data.sx.set (xlow - 1, null);
 	    return nu.getData ();
 	}
 
@@ -141,7 +142,7 @@ class LeafBuilder {
 	    taken++;
 	    while (ylow < yhigh && isUsedNode (data.sy, ylow))
 		ylow++;
-	    NodeUsage<T> nu = data.sy.get (ylow++);
+	    NodeUsage<T> nu = data.sy.set (ylow++, null);
 	    nu.use ();
 	    return nu.getData ();
 	}
@@ -156,6 +157,7 @@ class LeafBuilder {
 	    taken++;
 	    NodeUsage<T> nu = getLastUnusedXNode ();
 	    nu.use ();
+	    data.sx.set (xlow - 1, null);
 	    return nu.getData ();
 	}
 
@@ -163,7 +165,7 @@ class LeafBuilder {
 	    taken++;
 	    while (yhigh > ylow && isUsedNode (data.sy, yhigh))
 		yhigh--;
-	    NodeUsage<T> nu = data.sy.get (yhigh--);
+	    NodeUsage<T> nu = data.sy.set (yhigh--, null);
 	    nu.use ();
 	    return nu.getData ();
 	}
