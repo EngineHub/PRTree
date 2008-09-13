@@ -58,14 +58,15 @@ public class PRTree<T> {
 	List<LeafNode<T>> leafNodes =
 	    new ArrayList<LeafNode<T>> (estimateSize (numLeafs));
 	LeafBuilder lb = new LeafBuilder (branchFactor);
-	lb.buildLeafs (data, leafNodes, xSorter, ySorter, new LeafNodeFactory ());
+	lb.buildLeafs (data, leafNodes, xSorter, ySorter, 
+		       new LeafNodeFactory ());
 
 	height = 1;
 	if (leafNodes.size () < branchFactor) {
 	    setRoot (leafNodes);
 	} else {
-	    XNodeComparator<T> xs = new XNodeComparator<T> ();
-	    YNodeComparator<T> ys = new YNodeComparator<T> ();
+	    XNodeComparator<T> xs = new XNodeComparator<T> (converter);
+	    YNodeComparator<T> ys = new YNodeComparator<T> (converter);
 	    List<? extends Node<T>> nodes = leafNodes;
 	    do {
 		height++;
@@ -83,7 +84,7 @@ public class PRTree<T> {
     /** Get a minimum bounding rectangle of the data stored in this tree.
      */
     public MBR getMBR () {
-	return root.getMBR ();
+	return root.getMBR (converter);
     }
     
     /** Get the number of data leafs in this tree. 
@@ -112,7 +113,7 @@ public class PRTree<T> {
     private class LeafNodeFactory
 	implements LeafBuilder.NodeFactory<LeafNode<T>> {
 	public LeafNode<T> create (Object[] data) {
-	    return new LeafNode<T> (data, converter);
+	    return new LeafNode<T> (data);
 	}
     }
 
@@ -150,7 +151,7 @@ public class PRTree<T> {
     public void find (MBR query, List<T> resultNodes) {
 	validateRect (query.getMinX (), query.getMinY (), 
 		      query.getMaxX (), query.getMaxY ());
-	root.find (query, resultNodes);
+	root.find (query, converter, resultNodes);
     }
 
     /** Find all objects that intersect the given rectangle.
@@ -205,7 +206,7 @@ public class PRTree<T> {
 	    while (ts.isEmpty () && !toVisit.isEmpty ()) {
 		Node<T> n = toVisit.remove (toVisit.size () - 1);
 		visitedNodes++;
-		n.expand (mbr, ts, toVisit);
+		n.expand (mbr, converter, ts, toVisit);
 	    }
 	    if (ts.isEmpty ()) {
 		next = null;

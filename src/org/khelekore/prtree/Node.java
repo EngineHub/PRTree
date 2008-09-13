@@ -9,14 +9,15 @@ interface Node<T> {
     int size ();
     
     /** Get the MBR of this node */
-    MBR getMBR ();
+    MBR getMBR (MBRConverter<T> converter);
     
     /** Visit this node and add the leafs to the found list and add 
      *  any child nodes to the list of nodes to expand.
      */
-    void expand (MBR mbr, List<T> found, List<Node<T>> nodesToExpand);
+    void expand (MBR mbr, MBRConverter<T> converter, 
+		 List<T> found, List<Node<T>> nodesToExpand);
     
     /** Find nodes that intersect with the given MBR.
      */
-    void find (MBR mbr, List<T> result);
+    void find (MBR mbr, MBRConverter<T> converter, List<T> result);
 }

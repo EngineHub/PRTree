@@ -21,13 +21,13 @@ abstract class NodeBase<N, T> implements Node<T> {
 	return (N)data[i];
     }
     
-    public MBR getMBR () {
+    public MBR getMBR (MBRConverter<T> converter) {
 	if (mbr == null)
-	    mbr = computeMBR ();
+	    mbr = computeMBR (converter);
 	return mbr;
     }
     
-    public abstract MBR computeMBR ();
+    public abstract MBR computeMBR (MBRConverter<T> converter);
     
     public MBR getUnion (MBR m1, MBR m2) {
 	if (m1 == null)
