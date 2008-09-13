@@ -185,14 +185,6 @@ public class TestRTree {
 	
     }
 
-    private void testFindSpeed (int round, int branchFactor, 
-				List<Rectangle2D> rects) {
-	System.out.print (round + ":" + branchFactor + ": ");
-	tree = new PRTree<Rectangle2D> (converter, branchFactor);
-	tree.load (rects);
-	testFindSpeedIterator ();
-   }
-
     public static void main (String args[]) {
 	JUnitCore.main (TestRTree.class.getName ());
     }
