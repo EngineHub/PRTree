@@ -105,27 +105,34 @@ public class TestRTree {
 
     @Test
     public void testMany () {
-	int numRects = 1000000;
+	int numRects = 1000000 / 2;
 	MBR queryInside = new SimpleMBR (495, 495, 504.9, 504.9);
 	MBR queryOutside = new SimpleMBR (1495, 495, 1504.9, 504.9);
 	int shouldFindInside = 0;
 	int shouldFindOutside = 0;
-	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
+	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects * 2);
+	// build an "X"
 	for (int i = 0; i < numRects; i++) {
-	    Rectangle2D r = new Rectangle2D.Double (i, i, 10, 10);
-	    if (queryInside.intersects (r, converter)) 
+	    Rectangle2D r1 = new Rectangle2D.Double (i, i, 10, 10);
+	    Rectangle2D r2 = new Rectangle2D.Double (i, numRects - i, 10, 10);
+	    if (queryInside.intersects (r1, converter)) 
 		shouldFindInside++;
-	    if (queryOutside.intersects (r, converter)) 
+	    if (queryOutside.intersects (r1, converter)) 
 		shouldFindOutside++;
-	    rects.add (r);
+	    if (queryInside.intersects (r2, converter)) 
+		shouldFindInside++;
+	    if (queryOutside.intersects (r2, converter)) 
+		shouldFindOutside++;
+	    rects.add (r1);
+	    rects.add (r2);
 	}
 
 	// shuffle, but make sure the shuffle is the same every time
 	Random random = new Random (4711);
 	Collections.shuffle (rects, random);
 	tree.load (rects);
-	int count = 0;
 
+	int count = 0;
 	// dx = 10, each rect is 10 so 20 in total
 	for (Rectangle2D r : tree.find (queryInside)) 
 	    count++;
