@@ -131,18 +131,62 @@ public class TestRTree {
 	Random random = new Random (4711);
 	Collections.shuffle (rects, random);
 	tree.load (rects);
-
+	
 	int count = 0;
 	// dx = 10, each rect is 10 so 20 in total
-	for (Rectangle2D r : tree.find (queryInside)) 
+ 	for (Rectangle2D r : tree.find (queryInside)) 
 	    count++;
 	assertEquals ("should find some rectangles", shouldFindInside, count);
-
+	
 	count = 0;
 	for (Rectangle2D r : tree.find (queryOutside))
 	    count++;
 
 	assertEquals ("should not find rectangles", shouldFindOutside, count);
+    }
+
+    private static final double RANGE = 100000;
+    private double getRandomRectangleSize (Random random) {
+	return random.nextDouble () * RANGE - RANGE / 2;
+    }
+
+    @Test 
+    public void testRandom () {
+	int numRects = 100000;
+	int numRounds = 100;
+
+	Random random = new Random (1234);  // same random every time	
+	for (int round = 0; round < numRounds; round++) {
+	    tree = new PRTree<Rectangle2D> (converter, 10);	    
+	    List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
+	    for (int i = 0; i < numRects; i++) {
+		Rectangle2D r = 
+		    new Rectangle2D.Double (getRandomRectangleSize (random), 
+					    getRandomRectangleSize (random),
+					    getRandomRectangleSize (random),
+					    getRandomRectangleSize (random));
+		rects.add (r);
+	    }
+	    tree.load (rects);
+	    double x1 = getRandomRectangleSize (random); 
+	    double y1 = getRandomRectangleSize (random);
+	    double x2 = getRandomRectangleSize (random); 
+	    double y2 = getRandomRectangleSize (random);
+	    MBR query = new SimpleMBR (Math.min (x1, x2), Math.min (y1, y2),
+				       Math.max (x1, x2), Math.min (y1, y2));
+
+	    int countSimple = 0; 
+	    for (Rectangle2D r : rects) {
+		if (query.intersects (r, converter))
+		    countSimple++;
+	    }
+
+	    int countTree = 0;
+	    for (Rectangle2D r : tree.find (query)) 
+		countTree++;
+	    assertEquals (round + ": should find same number of rectangles",
+			  countSimple, countTree);
+	}
     }
 
     @Test
