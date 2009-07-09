@@ -1,5 +1,8 @@
 PRTree is a Priority R-Tree, a spatial index.
 
+For some background read this:
+http://www.cs.umd.edu/class/spring2005/cmsc828s/slides/prtree.pdf
+
 PRTree is written to be fast and use as little memory aspossible. 
 
 The source for org.khelekore.prtree.junit.TestRTree has a few examples
