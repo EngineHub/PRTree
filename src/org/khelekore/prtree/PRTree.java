@@ -53,28 +53,32 @@ public class PRTree<T> {
 	if (root != null)
 	    throw new IllegalStateException ("Tree is already loaded");
 	numLeafs = data.size ();
-	XComparator<T> xSorter = new XComparator<T> (converter);
-	YComparator<T> ySorter = new YComparator<T> (converter);
+	XMinComparator<T> xMinSorter = new XMinComparator<T> (converter);
+	YMinComparator<T> yMinSorter = new YMinComparator<T> (converter);
+	XMaxComparator<T> xMaxSorter = new XMaxComparator<T> (converter);
+	YMaxComparator<T> yMaxSorter = new YMaxComparator<T> (converter);
 	List<LeafNode<T>> leafNodes =
 	    new ArrayList<LeafNode<T>> (estimateSize (numLeafs));
 	LeafBuilder lb = new LeafBuilder (branchFactor);
-	lb.buildLeafs (data, leafNodes, xSorter, ySorter, 
-		       new LeafNodeFactory ());
+	lb.buildLeafs (data, leafNodes, xMinSorter, yMinSorter, 
+		       xMaxSorter, yMaxSorter, new LeafNodeFactory ());
 
 	height = 1;
 	if (leafNodes.size () < branchFactor) {
 	    setRoot (leafNodes);
 	} else {
-	    XNodeComparator<T> xs = new XNodeComparator<T> (converter);
-	    YNodeComparator<T> ys = new YNodeComparator<T> (converter);
+	    XMinNodeComparator<T> xMins = new XMinNodeComparator<T> (converter);
+	    YMinNodeComparator<T> yMins = new YMinNodeComparator<T> (converter);
+	    XMaxNodeComparator<T> xMaxs = new XMaxNodeComparator<T> (converter);
+	    YMaxNodeComparator<T> yMaxs = new YMaxNodeComparator<T> (converter);
 	    List<? extends Node<T>> nodes = leafNodes;
 	    do {
 		height++;
 		int es = estimateSize (nodes.size ());
 		List<InternalNode<T>> internalNodes =
 		    new ArrayList<InternalNode<T>> (es);
-		lb.buildLeafs (nodes, internalNodes, xs, ys,
-			       new InternalNodeFactory ());
+		lb.buildLeafs (nodes, internalNodes, xMins, yMins,
+			       xMaxs, yMaxs, new InternalNodeFactory ());
 		nodes = internalNodes;
 	    } while (nodes.size () > branchFactor);
 	    setRoot (nodes);

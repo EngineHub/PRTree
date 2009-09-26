@@ -29,46 +29,61 @@ class LeafBuilder {
     }
 
     public <T, N> void buildLeafs (List<? extends T> ls, List<N> leafNodes,
-				   Comparator<T> xSorter,
-				   Comparator<T> ySorter,
+				   Comparator<T> xMinSorter,
+				   Comparator<T> yMinSorter,
+				   Comparator<T> xMaxSorter,
+				   Comparator<T> yMaxSorter,
 				   NodeFactory<N> nf) {
 	/** To not waste so much memory we create two lists, sorted by xmin 
 	 *  and ymin respectivly. The two lists hold the same objects so we
 	 *  can modify the usage info from either list.
 	 */
 	listHolderId = 1;
-	List<NodeUsage<T>> lsx = new ArrayList<NodeUsage<T>> (ls.size ());
-	List<NodeUsage<T>> lsy = new ArrayList<NodeUsage<T>> (ls.size ());
+	List<NodeUsage<T>> xmin = new ArrayList<NodeUsage<T>> (ls.size ());
+	List<NodeUsage<T>> ymin = new ArrayList<NodeUsage<T>> (ls.size ());
+	List<NodeUsage<T>> xmax = new ArrayList<NodeUsage<T>> (ls.size ());
+	List<NodeUsage<T>> ymax = new ArrayList<NodeUsage<T>> (ls.size ());
 
 	for (T t : ls) {
 	    NodeUsage<T> nu = new NodeUsage<T> (t);
-	    lsx.add (nu);
-	    lsy.add (nu);
+	    xmin.add (nu);
+	    ymin.add (nu);
+	    xmax.add (nu);
+	    ymax.add (nu);
 	}
 
-	Collections.sort (lsx, new NodeUsageSorter<T> (xSorter));
-	Collections.sort (lsy, new NodeUsageSorter<T> (ySorter));
+	Collections.sort (xmin, new NodeUsageSorter<T> (xMinSorter));
+	Collections.sort (ymin, new NodeUsageSorter<T> (yMinSorter));
+	Collections.sort (xmax, new NodeUsageSorter<T> (xMaxSorter));
+	Collections.sort (ymax, new NodeUsageSorter<T> (yMaxSorter));
 	List<NodeGetter<T>> toExpand = new ArrayList<NodeGetter<T>> ();
-	ListData<T> listData = new ListData<T> (lsx, lsy);
-	int top = lsx.size () - 1;
-	toExpand.add (new NodeGetter<T> (listData, listHolderId++, lsx.size (),
-					 0, 0, top, top));;
+	ListData<T> listData = new ListData<T> (xmin, ymin, xmax, ymax);
+	toExpand.add (new NodeGetter<T> (listData, listHolderId++, xmin.size (),
+					 0, 0, 0, 0));;
 	internalBuildLeafs (toExpand, leafNodes, nf);
     }
 
     private static class ListData<T> {
-	// Same NodeUsage objects in both lists, just ordered differently.
-	public List<NodeUsage<T>> sx;
-	public List<NodeUsage<T>> sy;
+	// Same NodeUsage objects in all lists, just ordered differently.
+	public final List<NodeUsage<T>> xmin;
+	public final List<NodeUsage<T>> ymin;
+	public final List<NodeUsage<T>> xmax;
+	public final List<NodeUsage<T>> ymax;
 
-	public ListData (List<NodeUsage<T>> sx, List<NodeUsage<T>> sy) {
-	    this.sx = sx;
-	    this.sy = sy;
+	public ListData (List<NodeUsage<T>> xmin, List<NodeUsage<T>> ymin, 
+			 List<NodeUsage<T>> xmax, List<NodeUsage<T>> ymax) {
+	    this.xmin = xmin;
+	    this.ymin = ymin;
+	    this.xmax = xmax;
+	    this.ymax = ymax;
 	}
 	
 	@Override public String toString () {
 	    return getClass ().getSimpleName () + 
-		"{sx: " + sx + ", sy: " + sy + "}";
+		"{" + 
+		"xmin: " + xmin + ", ymin: " + ymin + 
+		"xmax: " + xmax + ", ymax: " + ymax + 
+		"}";
 	}
     }
 
@@ -79,19 +94,19 @@ class LeafBuilder {
 	private int id;
 
 	// indexes for list scanning
-	private int xlow;  // goes up as we pick low nodes
+	private int xlow;  // goes up as we pick nodes
 	private int ylow;
-	private int xhigh; // goes down as we pick high nodes
+	private int xhigh;
 	private int yhigh;
 
 	/** 
 	 * @param data the lists to grab node data from
 	 * @param id the id of the nodes we may pick
 	 * @param size the number of nodes we may pick
-	 * @param xlow the lower start index for the x list 
-	 * @param ylow the lower start index for the x list
-	 * @param xhigh the upper start index for the x list
-	 * @param yhigh the upper start index for the x list
+	 * @param xlow the lower start index for the xlow list 
+	 * @param ylow the lower start index for the ylow list
+	 * @param xhigh the lower start index for the xmax list
+	 * @param yhigh the lower start index for the ymax list
 	 */
 	public NodeGetter (ListData<T> data, int id, int size,
 			   int xlow, int ylow, int xhigh, int yhigh) {
@@ -124,48 +139,45 @@ class LeafBuilder {
 	    return nu == null || nu.isUsed () || nu.getUser () != id;
 	}
 
+	private int findNextFree (List<NodeUsage<T>> ls, int pos) {
+	    while (pos < ls.size () && isUsedNode (ls, pos))
+		pos++;
+	    return pos;
+	}
+	
 	private NodeUsage<T> getFirstUnusedXNode () {
-	    while (xlow < xhigh && isUsedNode (data.sx, xlow))
-		xlow++;
-	    return data.sx.get (xlow++);
+	    xlow = findNextFree (data.xmin, xlow);
+	    return data.xmin.get (xlow++);
 	}
 
 	public T getFirstUnusedX () {
 	    taken++;
 	    NodeUsage<T> nu = getFirstUnusedXNode ();
 	    nu.use ();
-	    data.sx.set (xlow - 1, null);
+	    data.xmin.set (xlow - 1, null);
 	    return nu.getData ();
 	}
 
 	public T getFirstUnusedY () {
 	    taken++;
-	    while (ylow < yhigh && isUsedNode (data.sy, ylow))
-		ylow++;
-	    NodeUsage<T> nu = data.sy.set (ylow++, null);
+	    ylow = findNextFree (data.ymin, ylow);
+	    NodeUsage<T> nu = data.ymin.set (ylow++, null);
 	    nu.use ();
 	    return nu.getData ();
 	}
 
-	private NodeUsage<T> getLastUnusedXNode () {
-	    while (xhigh > xlow && isUsedNode (data.sx, xhigh))
-		xhigh--;
-	    return data.sx.get (xhigh--);
-	}
-
 	public T getLastUnusedX () {
 	    taken++;
-	    NodeUsage<T> nu = getLastUnusedXNode ();
+	    xhigh = findNextFree (data.xmax, xhigh);
+	    NodeUsage<T> nu = data.xmax.set (xhigh++, null);
 	    nu.use ();
-	    data.sx.set (xlow - 1, null);
 	    return nu.getData ();
 	}
 
 	public T getLastUnusedY () {
 	    taken++;
-	    while (yhigh > ylow && isUsedNode (data.sy, yhigh))
-		yhigh--;
-	    NodeUsage<T> nu = data.sy.set (yhigh--, null);
+	    yhigh = findNextFree (data.ymax, yhigh);
+	    NodeUsage<T> nu = data.ymax.set (yhigh++, null);
 	    nu.use ();
 	    return nu.getData ();
 	}
@@ -181,32 +193,32 @@ class LeafBuilder {
 	    int highId = listHolderId++;
 
 	    // save positions
-	    int xl = xlow;
-	    int xh = xhigh;
+	    int xmn = xlow;
+	    int ymn = ylow;
+	    int xmx = xhigh;
+	    int ymx = yhigh;
 
-	    // pick a low element to the low list, mark as low,
-	    // pick a high element to the high list, mark as high
-	    while (hasMoreData ()) {
-		taken++;
-		NodeUsage<T> nu = getFirstUnusedXNode ();
-		nu.setUser (lowId);
-		if (hasMoreData ()) {
-		    taken++;
-		    nu = getLastUnusedXNode ();
-		    nu.setUser (highId);
-		}
-	    }
+	    // mark half the elements for lowId and half for highId
+	    for (int i = 0; i < lowSize; i++)
+		markForId (lowId);
+	    for (int i = 0; i < highSize; i++)
+		markForId (highId);
 
 	    NodeGetter<T> lhLow =
-		new NodeGetter<T> (data, lowId, lowSize, 
-				   xl, ylow, xhigh, yhigh);
+		new NodeGetter<T> (data, lowId, lowSize, xmn, ymn, xmx, ymx);
 	    NodeGetter<T> lhHigh =
-		new NodeGetter<T> (data, highId, highSize, 
-				   xlow, ylow, xh, yhigh);
+		new NodeGetter<T> (data, highId, highSize, xmn, ymn, xmx, ymx);
+	    
 	    List<NodeGetter<T>> ret = new ArrayList<NodeGetter<T>> (2);
 	    ret.add (lhLow);
 	    ret.add (lhHigh);
 	    return ret;
+	}
+
+	private void markForId (int id) {
+	    taken++;
+	    NodeUsage<T> nu = getFirstUnusedXNode ();
+	    nu.setUser (id);	
 	}
     }
 
@@ -220,7 +232,7 @@ class LeafBuilder {
 	    NodeGetter<T> lh = toExpand.remove (0);
 	    if (lh.hasMoreData ())
 		leafNodes.add (getLowXNode (lh, nf));
-
+	    
 	    if (lh.hasMoreData ())
 		leafNodes.add (getLowYNode (lh, nf));
 

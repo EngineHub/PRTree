@@ -2,10 +2,10 @@ package org.khelekore.prtree;
 
 import java.util.Comparator;
 
-class XNodeComparator<T> implements Comparator<Node<T>> {
+class XMinNodeComparator<T> implements Comparator<Node<T>> {
     private MBRConverter<T> converter;
 
-    public XNodeComparator (MBRConverter<T> converter) {
+    public XMinNodeComparator (MBRConverter<T> converter) {
 	this.converter = converter;
     }
     

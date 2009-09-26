@@ -112,6 +112,7 @@ public class TestRTree {
 	int shouldFindOutside = 0;
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects * 2);
 	// build an "X"
+	System.err.println ("building rects");
 	for (int i = 0; i < numRects; i++) {
 	    Rectangle2D r1 = new Rectangle2D.Double (i, i, 10, 10);
 	    Rectangle2D r2 = new Rectangle2D.Double (i, numRects - i, 10, 10);
@@ -127,10 +128,13 @@ public class TestRTree {
 	    rects.add (r2);
 	}
 
+	System.err.println ("shuffling rects");
 	// shuffle, but make sure the shuffle is the same every time
 	Random random = new Random (4711);
 	Collections.shuffle (rects, random);
+	System.err.println ("loading tree");
 	tree.load (rects);
+	System.err.println ("tree loaded");
 	
 	int count = 0;
 	// dx = 10, each rect is 10 so 20 in total
@@ -152,6 +156,7 @@ public class TestRTree {
 
     @Test 
     public void testRandom () {
+	System.err.println ("testRandom");
 	int numRects = 100000;
 	int numRounds = 100;
 
@@ -191,6 +196,7 @@ public class TestRTree {
 
     @Test
     public void testFindSpeed () {
+	System.err.println ("testFindSpeed");
 	int numRects = 100000;
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
 	for (int i = 0; i < numRects; i++)
