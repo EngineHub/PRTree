@@ -1,0 +1,6 @@
+classes/*
+.allclasses.txt
+.classes_to_compile
+.deps
+.packagelist
+jars/*
