@@ -19,15 +19,6 @@ class LeafBuilder {
 	this.branchFactor = branchFactor;
     }
 
-    /** A factory that creates the nodes (either leaf or internal).
-     */
-    public interface NodeFactory<N> {
-	/** Create a new node 
-	 * @param data the data entries for the node, fully filled.
-	 */
-	N create (Object[] data);
-    }
-
     public <T, N> void buildLeafs (List<? extends T> ls, List<N> leafNodes,
 				   Comparator<T> xMinSorter,
 				   Comparator<T> yMinSorter,
