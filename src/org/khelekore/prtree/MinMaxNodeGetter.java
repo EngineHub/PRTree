@@ -96,8 +96,8 @@ public class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
 	int lowSize = (e + 1) / 2;
 	int highSize = e - lowSize;
 
+	// Store start pos, but only min that changes
 	int minPosSave = minPos;
-	int maxPosSave = maxPos;
 
 	// mark half the elements for lowId
 	for (int i = 0; i < lowSize; i++)
@@ -105,16 +105,15 @@ public class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
 
 	MinMaxNodeGetter<T, N> lowPart =
 	    new MinMaxNodeGetter<T, N> (min, max, factory, lowId,
-					lowSize, minPosSave, maxPosSave);
+					lowSize, minPosSave, maxPos);
 	minPosSave = minPos;
-	maxPosSave = maxPos;
 
 	// mark the rest
 	for (int i = 0; i < highSize; i++)
 	    markForId (highId);
 	MinMaxNodeGetter<T, N> highPart =
 	    new MinMaxNodeGetter<T, N> (min, max, factory, highId,
-					highSize, minPosSave, maxPosSave);
+					highSize, minPosSave, maxPos);
 	List<MinMaxNodeGetter<T, N>> ret = new ArrayList<MinMaxNodeGetter<T, N>> (2);
 	ret.add (lowPart);
 	ret.add (highPart);
