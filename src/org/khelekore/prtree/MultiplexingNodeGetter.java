@@ -20,5 +20,12 @@ public class MultiplexingNodeGetter<N> implements NodeGetter<N> {
 	NodeGetter<N> getter = getters.get (pos++);
 	pos %= getters.size ();
 	return getter.getNextNode (maxObjects);
-    }    
+    }
+ 
+    public int getNumberOfNodes () {
+	int res = 0;
+	for (NodeGetter<N> n : getters)
+	    res += n.getNumberOfNodes ();
+	return res;
+    }
 }

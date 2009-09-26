@@ -87,6 +87,10 @@ public class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
 	return factory.create (data);
     }
 
+    public int getNumberOfNodes () {
+	return 2;
+    }
+
     public List<MinMaxNodeGetter<T, N>> split (int lowId, int highId) {
 	int e = size - taken;
 	int lowSize = (e + 1) / 2;
