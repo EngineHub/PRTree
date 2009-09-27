@@ -8,46 +8,60 @@ import java.util.List;
 /** A node getter that multiplexes min and max values
  * @param <N> the type of the node
  */
-public class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
+class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
     private final List<NodeUsage<T>> min;
     private final List<NodeUsage<T>> max;
     private final NodeFactory<N> factory;
+    private final TakeCounter takeCounter;
     private final int id;
-    private final int size;
-
+    
     private int minPos = 0;
     private int maxPos = 0;
-    private int taken = 0;
-    private boolean takeMin = true;
+    private int takenNodes = 0;
 
     public MinMaxNodeGetter (List<NodeUsage<T>> data,
 			     NodeFactory<N> factory,
 			     Comparator<T> minSorter,
 			     Comparator<T> maxSorter,
+			     TakeCounter takeCounter,
 			     int id) {
 	min = new ArrayList<NodeUsage<T>> (data);
 	Collections.sort (min, new NodeUsageSorter<T> (minSorter));
 	max = new ArrayList<NodeUsage<T>> (data);
 	Collections.sort (max, new NodeUsageSorter<T> (maxSorter));
 	this.factory = factory;
+	this.takeCounter = takeCounter;
 	this.id = id;
-	this.size = data.size ();
     }
 
     private MinMaxNodeGetter (List<NodeUsage<T>> min,
 			      List<NodeUsage<T>> max,
 			      NodeFactory<N> factory,
+			      TakeCounter takeCounter,
 			      int id,
-			      int size,
 			      int minPos,
 			      int maxPos) {
 	this.min = min;
 	this.max = max;
 	this.factory = factory;
+	this.takeCounter = takeCounter;
 	this.id = id;
-	this.size = size;
 	this.minPos = minPos;
 	this.maxPos = maxPos;
+    }
+
+    public MinMaxNodeGetter<T, N> getCopyFor (int newId, int size, 
+					      TakeCounter takeCounter) {
+	return new MinMaxNodeGetter<T, N> (min, max, factory, takeCounter, 
+					   newId, minPos, maxPos);
+    }
+
+    public int getSize () {
+	return takeCounter.getSize ();
+    }
+
+    public TakeCounter getTakeCounter () {
+	return takeCounter;
     }
 
     private boolean isUsedNode (List<NodeUsage<T>> ls, int pos) {
@@ -63,7 +77,7 @@ public class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
     }
 
     private T getFirstUnusedMin () {
-	taken++;
+	takeCounter.take ();
 	minPos = findNextFree (min, minPos);
 	NodeUsage<T> nu = min.set (minPos++, null);
 	nu.use ();
@@ -71,28 +85,32 @@ public class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
     }
 
     private T getFirstUnusedMax () {
-	taken++;
+	takeCounter.take ();
 	maxPos = findNextFree (max, maxPos);
-	NodeUsage<T> nu = min.set (maxPos++, null);
+	NodeUsage<T> nu = max.set (maxPos++, null);
 	nu.use ();
 	return nu.getData ();
     }
 
     public N getNextNode (int maxObjects) {
-	int num = Math.min (size - taken, maxObjects);
+	int num = Math.min (takeCounter.getNumLeft (), maxObjects);
 	Object[] data = new Object[num];
 	for (int i = 0; i < num; i++)
-	    data[i] = takeMin ? getFirstUnusedMin () : getFirstUnusedMax ();
-	takeMin = !takeMin;
+	    data[i] = takenNodes == 0 ? getFirstUnusedMin () : getFirstUnusedMax ();
+	takenNodes++;
 	return factory.create (data);
     }
 
-    public int getNumberOfNodes () {
-	return 2;
+    public boolean hasMoreNodes () {
+	return takenNodes < 2 && hasMoreData ();
+    }
+
+    public boolean hasMoreData () {
+	return takeCounter.canTakeMore ();
     }
 
     public List<MinMaxNodeGetter<T, N>> split (int lowId, int highId) {
-	int e = size - taken;
+	int e = takeCounter.getNumLeft ();
 	int lowSize = (e + 1) / 2;
 	int highSize = e - lowSize;
 
@@ -103,25 +121,28 @@ public class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
 	for (int i = 0; i < lowSize; i++)
 	    markForId (lowId);
 
+	TakeCounter tcLow = new TakeCounter (lowSize);
 	MinMaxNodeGetter<T, N> lowPart =
-	    new MinMaxNodeGetter<T, N> (min, max, factory, lowId,
-					lowSize, minPosSave, maxPos);
+	    new MinMaxNodeGetter<T, N> (min, max, factory, tcLow, 
+					lowId, minPosSave, maxPos);
 	minPosSave = minPos;
 
 	// mark the rest
 	for (int i = 0; i < highSize; i++)
 	    markForId (highId);
+	TakeCounter tcHigh = new TakeCounter (highSize);
 	MinMaxNodeGetter<T, N> highPart =
-	    new MinMaxNodeGetter<T, N> (min, max, factory, highId,
-					highSize, minPosSave, maxPos);
-	List<MinMaxNodeGetter<T, N>> ret = new ArrayList<MinMaxNodeGetter<T, N>> (2);
+	    new MinMaxNodeGetter<T, N> (min, max, factory, tcHigh, 
+					highId, minPosSave, maxPos);
+	List<MinMaxNodeGetter<T, N>> ret =
+	    new ArrayList<MinMaxNodeGetter<T, N>> (2);
 	ret.add (lowPart);
 	ret.add (highPart);
 	return ret;
     }
 
     private void markForId (int id) {
-	taken++;
+	takeCounter.take ();
 	minPos = findNextFree (min, minPos);
 	NodeUsage<T> nu = min.get (minPos++);
 	nu.setUser (id);
