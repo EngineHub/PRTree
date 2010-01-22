@@ -2,13 +2,14 @@ package org.khelekore.prtree;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 
 /** A Priority R-Tree, a spatial index.
  *  This tree only supports bulk loading.
  *
  *  <pre>{@code
- *  PRTree<Rectangle2D> tree = 
+ *  PRTree<Rectangle2D> tree =
  *      new PRTree<Rectangle2D> (new Rectangle2DConverter (), 10);
  *  Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
  *  tree.load (Collections.singletonList (rx));
@@ -16,7 +17,7 @@ import java.util.List;
  *      System.out.println ("found a rectangle: " + r);
  *  }
  *  }</pre>
- * 
+ *
  * @param <T> the data type stored in the PRTree
  */
 public class PRTree<T> {
@@ -43,13 +44,13 @@ public class PRTree<T> {
     /** Bulk load data into this tree.
      *
      *  Create the leaf nodes that each hold (up to) branchFactor data entries.
-     *  Then use the leaf nodes as data until we can fit all nodes into 
+     *  Then use the leaf nodes as data until we can fit all nodes into
      *  the root node.
      *
      * @param data the collection of data to store in the tree.
      * @throws IllegalStateException if the tree is already loaded
      */
-    public void load (List<? extends T> data) {
+    public void load (Collection<? extends T> data) {
 	if (root != null)
 	    throw new IllegalStateException ("Tree is already loaded");
 	numLeafs = data.size ();
@@ -60,7 +61,7 @@ public class PRTree<T> {
 	List<LeafNode<T>> leafNodes =
 	    new ArrayList<LeafNode<T>> (estimateSize (numLeafs));
 	LeafBuilder lb = new LeafBuilder (branchFactor);
-	lb.buildLeafs (data, leafNodes, xMinSorter, yMinSorter, 
+	lb.buildLeafs (data, leafNodes, xMinSorter, yMinSorter,
 		       xMaxSorter, yMaxSorter, new LeafNodeFactory ());
 
 	height = 1;
@@ -90,14 +91,14 @@ public class PRTree<T> {
     public MBR getMBR () {
 	return root.getMBR (converter);
     }
-    
-    /** Get the number of data leafs in this tree. 
+
+    /** Get the number of data leafs in this tree.
      */
     public int getNumberOfLeaves () {
 	return numLeafs;
     }
 
-    /** Get the height of this tree. 
+    /** Get the height of this tree.
      */
     public int getHeight () {
 	return height;
@@ -142,7 +143,7 @@ public class PRTree<T> {
      *  the found node in the given list.
      * @param resultNodes the list that will be filled with the result
      */
-    public void find (double xmin, double ymin, double xmax, double ymax, 
+    public void find (double xmin, double ymin, double xmax, double ymax,
 		      List<T> resultNodes) {
 	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
 	find (mbr, resultNodes);
@@ -153,7 +154,7 @@ public class PRTree<T> {
      * @param resultNodes the list that will be filled with the result
      */
     public void find (MBR query, List<T> resultNodes) {
-	validateRect (query.getMinX (), query.getMinY (), 
+	validateRect (query.getMinX (), query.getMinY (),
 		      query.getMaxX (), query.getMaxY ());
 	root.find (query, converter, resultNodes);
     }
@@ -162,7 +163,7 @@ public class PRTree<T> {
      * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
      */
     public Iterable<T> find (final MBR query) {
-	validateRect (query.getMinX (), query.getMinY (), 
+	validateRect (query.getMinX (), query.getMinY (),
 		      query.getMaxX (), query.getMaxY ());
 	return new Iterable<T> () {
 	    public Iterator<T> iterator () {
@@ -174,7 +175,7 @@ public class PRTree<T> {
     /** Find all objects that intersect the given rectangle.
      * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
      */
-    public Iterable<T> find (double xmin, double ymin, 
+    public Iterable<T> find (double xmin, double ymin,
 			     double xmax, double ymax) {
 	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
 	return find (mbr);

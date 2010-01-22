@@ -2,6 +2,7 @@ package org.khelekore.prtree;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Collection;
 import java.util.List;
 
 /** A builder of internal nodes used during bulk loading of a PR-Tree.
@@ -17,7 +18,7 @@ class LeafBuilder {
 	this.branchFactor = branchFactor;
     }
 
-    public <T, N> void buildLeafs (List<? extends T> ls,
+    public <T, N> void buildLeafs (Collection<? extends T> ls,
 				   List<N> leafNodes,
 				   Comparator<T> xMinSorter,
 				   Comparator<T> yMinSorter,
@@ -38,10 +39,11 @@ class LeafBuilder {
 	MultiplexingNodeGetter<T, N> plex =
 	    new MultiplexingNodeGetter<T, N> (mmx, mmy);
 
-	doEpansion (leafNodes, id, plex);
+	doExpansion (leafNodes, id, plex);
     }
 
-    private <N> void doEpansion (List<N> leafNodes, int id, NodeGetter<N> plex) {
+    private <N> void doExpansion (List<N> leafNodes, int id,
+				  NodeGetter<N> plex) {
 	List<NodeGetter<N>> toExpand = new ArrayList<NodeGetter<N>> ();
 	toExpand.add (plex);
 
@@ -57,7 +59,7 @@ class LeafBuilder {
 	    }
 	}
     }
-    
+
     private <T, N> MinMaxNodeGetter<T, N> getMM (List<NodeUsage<T>> nodes,
 						 NodeFactory<N> nf,
 						 Comparator<T> min,
