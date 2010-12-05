@@ -30,6 +30,7 @@ public class PRTree<T> {
     private int height;
 
     /** Create a new PRTree using the specified branch factor.
+     * @param converter the MBRConverter to use for this tree
      * @param branchFactor the number of child nodes for each internal node.
      */
     public PRTree (MBRConverter<T> converter, int branchFactor) {
@@ -87,18 +88,21 @@ public class PRTree<T> {
     }
 
     /** Get a minimum bounding rectangle of the data stored in this tree.
+     * @return the MBR of the whole PRTree
      */
     public MBR getMBR () {
 	return root.getMBR (converter);
     }
 
     /** Get the number of data leafs in this tree.
+     * @return the total number of leafs in this tree
      */
     public int getNumberOfLeaves () {
 	return numLeafs;
     }
 
     /** Get the height of this tree.
+     * @return the total height of this tree
      */
     public int getHeight () {
 	return height;
@@ -141,6 +145,10 @@ public class PRTree<T> {
 
     /** Finds all objects that intersect the given rectangle and stores
      *  the found node in the given list.
+     * @param xmin the minimum value of the x coordinate when searching
+     * @param ymin the minimum value of the y coordinate when searching
+     * @param xmax the maximum value of the x coordinate when searching
+     * @param ymax the maximum value of the y coordinate when searching
      * @param resultNodes the list that will be filled with the result
      */
     public void find (double xmin, double ymin, double xmax, double ymax,
@@ -151,6 +159,7 @@ public class PRTree<T> {
 
     /** Finds all objects that intersect the given rectangle and stores
      *  the found node in the given list.
+     * @param query the bounds of the query
      * @param resultNodes the list that will be filled with the result
      */
     public void find (MBR query, List<T> resultNodes) {
@@ -160,7 +169,9 @@ public class PRTree<T> {
     }
 
     /** Find all objects that intersect the given rectangle.
+     * @param query the bounds of the query
      * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
+     * @return an iterable of the elements inside the query rectangle
      */
     public Iterable<T> find (final MBR query) {
 	validateRect (query.getMinX (), query.getMinY (),
@@ -173,6 +184,11 @@ public class PRTree<T> {
     }
 
     /** Find all objects that intersect the given rectangle.
+     * @param xmin the minimum value of the x coordinate when searching
+     * @param ymin the minimum value of the y coordinate when searching
+     * @param xmax the maximum value of the x coordinate when searching
+     * @param ymax the maximum value of the y coordinate when searching
+     * @return an iterable of the elements inside the query rectangle
      * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
      */
     public Iterable<T> find (double xmin, double ymin,
@@ -224,5 +240,15 @@ public class PRTree<T> {
 	public void remove () {
 	    throw new UnsupportedOperationException ("Not implemented");
 	}
+    }
+
+    /** Get the nearest neighbour of the given point
+     * @param x the x coordinate to find the nearest neighbour to
+     * @param y the y coordinate to find the nearest neighbour to
+     * @return the closest element or null if the tree is empty
+     */
+    public T nearestNeighbour (double x, double y) {
+	NearestNeighbour<T> nn = new NearestNeighbour<T> (root);
+	return nn.find ();
     }
 }
