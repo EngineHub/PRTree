@@ -101,6 +101,13 @@ public class PRTree<T> {
 	return numLeafs;
     }
 
+    /** Check if this tree is empty
+     * @return true if the number of leafs is 0, false otherwise
+     */
+    public boolean isEmpty () {
+	return numLeafs == 0;
+    }
+
     /** Get the height of this tree.
      * @return the total height of this tree
      */
@@ -243,12 +250,18 @@ public class PRTree<T> {
     }
 
     /** Get the nearest neighbour of the given point
+     * @param dc the DistanceCalculator to use
      * @param x the x coordinate to find the nearest neighbour to
      * @param y the y coordinate to find the nearest neighbour to
-     * @return the closest element or null if the tree is empty
+     * @return a DistanceResult with the nearest object and the distance.
+     *         Will return null if the tree is empty.
      */
-    public T nearestNeighbour (double x, double y) {
-	NearestNeighbour<T> nn = new NearestNeighbour<T> (root);
+    public DistanceResult<T> nearestNeighbour (DistanceCalculator<T> dc,
+					       double x, double y) {
+	if (isEmpty ())
+	    return null;
+	NearestNeighbour<T> nn =
+	    new NearestNeighbour<T> (converter, root, dc, x, y);
 	return nn.find ();
     }
 }

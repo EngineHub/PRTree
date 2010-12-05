@@ -1,6 +1,7 @@
 package org.khelekore.prtree;
 
 import java.util.List;
+import java.util.PriorityQueue;
 
 class LeafNode<T> extends NodeBase<T, T> {
 
@@ -12,7 +13,7 @@ class LeafNode<T> extends NodeBase<T, T> {
 	return new SimpleMBR (converter.getMinX (t), converter.getMinY (t),
 			      converter.getMaxX (t), converter.getMaxY (t));
     }
-    
+
     @Override public MBR computeMBR (MBRConverter<T> converter) {
 	MBR ret = null;
 	for (int i = 0, s = size (); i < s; i++)
@@ -20,7 +21,7 @@ class LeafNode<T> extends NodeBase<T, T> {
 	return ret;
     }
 
-    public void expand (MBR mbr, MBRConverter<T> converter, 
+    public void expand (MBR mbr, MBRConverter<T> converter,
 			List<T> found, List<Node<T>> nodesToExpand) {
 	find (mbr, converter, found);
     }
@@ -31,5 +32,18 @@ class LeafNode<T> extends NodeBase<T, T> {
 	    if (mbr.intersects (t, converter))
 		result.add (t);
 	}
+    }
+
+    public DistanceResult<T> nnExpand (DistanceCalculator<T> dc,
+				       DistanceResult<T> dr,
+				       PriorityQueue<Node<T>> queue,
+				       MinDistComparator<T, Node<T>> mdc) {
+	for (int i = 0, s = size (); i < s; i++) {
+	    T  t = get (i);
+	    double dist = dc.distanceTo (t, mdc.x, mdc.y);
+	    if (dist < dr.getDistance ())
+		dr = new DistanceResult<T> (t, dist);
+	}
+	return dr;
     }
 }

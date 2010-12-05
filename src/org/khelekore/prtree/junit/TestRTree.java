@@ -8,20 +8,24 @@ import java.util.Random;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
+import org.khelekore.prtree.DistanceCalculator;
+import org.khelekore.prtree.DistanceResult;
 import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.MBRConverter;
+import org.khelekore.prtree.MinDist;
 import org.khelekore.prtree.PRTree;
 import org.khelekore.prtree.SimpleMBR;
 
 import static org.junit.Assert.*;
 
 public class TestRTree {
+    private static final int BRANCH_FACTOR = 30;
     private Rectangle2DConverter converter = new Rectangle2DConverter ();
     private PRTree<Rectangle2D> tree;
 
     @Before
     public void setUp() {
-	tree = new PRTree<Rectangle2D> (converter, 10);
+	tree = new PRTree<Rectangle2D> (converter, BRANCH_FACTOR);
     }
 
     private class Rectangle2DConverter implements MBRConverter<Rectangle2D> {
@@ -94,7 +98,8 @@ public class TestRTree {
 
     @Test
     public void testHeight () {
-	int numRects = 11;  // root and below it we have two leaf nodes 
+	// root and below it we have two leaf nodes
+	int numRects = BRANCH_FACTOR + 1;
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
 	for (int i = 0; i < numRects; i++) {
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
@@ -105,7 +110,7 @@ public class TestRTree {
 
     @Test
     public void testMany () {
-	int numRects = 1000000 / 2;
+	int numRects = 300000 / 2;
 	MBR queryInside = new SimpleMBR (495, 495, 504.9, 504.9);
 	MBR queryOutside = new SimpleMBR (1495, 495, 1504.9, 504.9);
 	int shouldFindInside = 0;
@@ -116,13 +121,13 @@ public class TestRTree {
 	for (int i = 0; i < numRects; i++) {
 	    Rectangle2D r1 = new Rectangle2D.Double (i, i, 10, 10);
 	    Rectangle2D r2 = new Rectangle2D.Double (i, numRects - i, 10, 10);
-	    if (queryInside.intersects (r1, converter)) 
+	    if (queryInside.intersects (r1, converter))
 		shouldFindInside++;
-	    if (queryOutside.intersects (r1, converter)) 
+	    if (queryOutside.intersects (r1, converter))
 		shouldFindOutside++;
-	    if (queryInside.intersects (r2, converter)) 
+	    if (queryInside.intersects (r2, converter))
 		shouldFindInside++;
-	    if (queryOutside.intersects (r2, converter)) 
+	    if (queryOutside.intersects (r2, converter))
 		shouldFindOutside++;
 	    rects.add (r1);
 	    rects.add (r2);
@@ -135,13 +140,13 @@ public class TestRTree {
 	System.err.println ("loading tree");
 	tree.load (rects);
 	System.err.println ("tree loaded");
-	
+
 	int count = 0;
 	// dx = 10, each rect is 10 so 20 in total
- 	for (Rectangle2D r : tree.find (queryInside)) 
+ 	for (Rectangle2D r : tree.find (queryInside))
 	    count++;
 	assertEquals ("should find some rectangles", shouldFindInside, count);
-	
+
 	count = 0;
 	for (Rectangle2D r : tree.find (queryOutside))
 	    count++;
@@ -154,40 +159,40 @@ public class TestRTree {
 	return random.nextDouble () * RANGE - RANGE / 2;
     }
 
-    @Test 
+    @Test
     public void testRandom () {
 	System.err.println ("testRandom");
 	int numRects = 100000;
-	int numRounds = 100;
+	int numRounds = 10;
 
-	Random random = new Random (1234);  // same random every time	
+	Random random = new Random (1234);  // same random every time
 	for (int round = 0; round < numRounds; round++) {
-	    tree = new PRTree<Rectangle2D> (converter, 10);	    
+	    tree = new PRTree<Rectangle2D> (converter, 10);
 	    List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
 	    for (int i = 0; i < numRects; i++) {
-		Rectangle2D r = 
-		    new Rectangle2D.Double (getRandomRectangleSize (random), 
+		Rectangle2D r =
+		    new Rectangle2D.Double (getRandomRectangleSize (random),
 					    getRandomRectangleSize (random),
 					    getRandomRectangleSize (random),
 					    getRandomRectangleSize (random));
 		rects.add (r);
 	    }
 	    tree.load (rects);
-	    double x1 = getRandomRectangleSize (random); 
+	    double x1 = getRandomRectangleSize (random);
 	    double y1 = getRandomRectangleSize (random);
-	    double x2 = getRandomRectangleSize (random); 
+	    double x2 = getRandomRectangleSize (random);
 	    double y2 = getRandomRectangleSize (random);
 	    MBR query = new SimpleMBR (Math.min (x1, x2), Math.min (y1, y2),
 				       Math.max (x1, x2), Math.min (y1, y2));
 
-	    int countSimple = 0; 
+	    int countSimple = 0;
 	    for (Rectangle2D r : rects) {
 		if (query.intersects (r, converter))
 		    countSimple++;
 	    }
 
 	    int countTree = 0;
-	    for (Rectangle2D r : tree.find (query)) 
+	    for (Rectangle2D r : tree.find (query))
 		countTree++;
 	    assertEquals (round + ": should find same number of rectangles",
 			  countSimple, countTree);
@@ -201,7 +206,7 @@ public class TestRTree {
 	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
 	for (int i = 0; i < numRects; i++)
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
-	
+
 	System.out.println ("running speed test");
 	tree.load (rects);
 	testFindSpeedIterator ();
@@ -219,11 +224,11 @@ public class TestRTree {
 	long end = System.nanoTime ();
 	long diff = end - start;
 	System.out.println ("finding " + count + " took: " + (diff / 1000000) +
-			    " millis, average: " + (diff / numRounds) + 
+			    " millis, average: " + (diff / numRounds) +
 			    " nanos");
-	
+
     }
-    
+
     private void testFindSpeedArray () {
  	int count = 0;
 	int numRounds = 100000;
@@ -237,9 +242,58 @@ public class TestRTree {
 	long end = System.nanoTime ();
 	long diff = end - start;
 	System.out.println ("finding " + count + " took: " + (diff / 1000000) +
-			    " millis, average: " + (diff / numRounds) + 
+			    " millis, average: " + (diff / numRounds) +
 			    " nanos");
-	
+
+    }
+
+    @Test
+    public void testNNEmpty () {
+	tree.load (Collections.<Rectangle2D>emptyList ());
+	DistanceCalculator<Rectangle2D> dc = new RectDistance ();
+	DistanceResult<Rectangle2D> nnRes = tree.nearestNeighbour (dc, 0, 0);
+	assertNull ("Nearest neighbour on empty tree should be null", nnRes);
+    }
+
+    @Test
+    public void testNNSingle () {
+	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
+	tree.load (Collections.singletonList (rx));
+	DistanceCalculator<Rectangle2D> dc = new RectDistance ();
+	DistanceResult<Rectangle2D> nnRes = tree.nearestNeighbour (dc, 0.5, 0.5);
+	assertNotNull ("Nearest neighbour should have a value ", nnRes);
+	assertEquals ("Nearest neighbour on rectangle should be 0", 0,
+		      nnRes.getDistance (), 0.0001);
+
+	nnRes = tree.nearestNeighbour (dc, 2, 1);	
+	assertEquals ("Nearest neighbour give wrong distance", 1,
+		      nnRes.getDistance (), 0.0001);
+    }
+
+    @Test
+    public void testNNMany () {
+	int numRects = 100000;
+	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
+	for (int i = 0; i < numRects; i++)
+	    rects.add (new Rectangle2D.Double (i * 10, i * 10, 10, 10));
+	tree.load (rects);
+
+	DistanceCalculator<Rectangle2D> dc = new RectDistance ();
+	DistanceResult<Rectangle2D> nnRes = tree.nearestNeighbour (dc, -1, -1);
+	assertEquals ("Got wrong element back", rects.get (0), nnRes.get ());
+
+	nnRes = tree.nearestNeighbour (dc, 105, 99);
+	assertEquals ("Got wrong element back", rects.get (10), nnRes.get ());
+    }
+
+    private static class RectDistance
+	implements DistanceCalculator<Rectangle2D> {
+	public double distanceTo (Rectangle2D r, double x, double y) {
+	    double md = MinDist.get (r.getMinX (), r.getMinY (),
+				     r.getMaxX (), r.getMaxY (),
+				     x, y);
+	    return Math.sqrt (md);
+	}
     }
 
     public static void main (String args[]) {
