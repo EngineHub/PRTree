@@ -1,6 +1,5 @@
 package org.khelekore.prtree;
 
-import java.util.Comparator;
 import java.util.PriorityQueue;
 
 class NearestNeighbour<T> {

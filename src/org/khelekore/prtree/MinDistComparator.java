@@ -3,6 +3,8 @@ package org.khelekore.prtree;
 import java.util.Comparator;
 
 /** A comparator that uses the MINDIST metrics to sort Nodes
+ * @param <T> the data stored in the nodes
+ * @param <S> the actual node
  */
 class MinDistComparator<T, S extends Node<T>> implements Comparator<S> {
     public final MBRConverter<T> converter;

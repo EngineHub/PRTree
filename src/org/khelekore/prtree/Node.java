@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 /** A node in a Priority R-Tree
- * @param T the data type of the elements stored in this node
+ * @param <T> the data type of the elements stored in this node
  */
 interface Node<T> {
     /** Get the size of the node, that is how many data elements it holds
@@ -22,7 +22,7 @@ interface Node<T> {
      *  any child nodes to the list of nodes to expand.
      * @param mbr the query rectangle
      * @param converter the MBR converter to use for the actual objects
-b     * @param found the List of leaf nodes
+     * @param found the List of leaf nodes
      * @param nodesToExpand the List of nodes that needs to be expanded
     */
     void expand (MBR mbr, MBRConverter<T> converter,
