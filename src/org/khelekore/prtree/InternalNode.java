@@ -1,7 +1,5 @@
 package org.khelekore.prtree;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -39,7 +37,6 @@ class InternalNode<T> extends NodeBase<Node<T>, T> {
 				       PriorityQueue<Node<T>> queue,
 				       MinDistComparator<T, Node<T>> mdc) {
 	int s = size ();
-	List<Node<T>> adds = new ArrayList<Node<T>> (s);
 	for (int i = 0; i < s; i++) {
 	    Node<T> n = get (i);
 	    MBR mbr = n.getMBR (mdc.converter);
@@ -47,10 +44,8 @@ class InternalNode<T> extends NodeBase<Node<T>, T> {
 					  mbr.getMaxX (), mbr.getMaxY (), 
 					  mdc.x, mdc.y);
 	    if (minDist <= dr.getDistance ())
-		adds.add (n);
+		queue.add (n);
 	}
-	Collections.sort (adds, mdc);
-	queue.addAll (adds);
 	return dr;
     }
 }

@@ -265,7 +265,7 @@ public class TestRTree {
 	assertEquals ("Nearest neighbour on rectangle should be 0", 0,
 		      nnRes.getDistance (), 0.0001);
 
-	nnRes = tree.nearestNeighbour (dc, 2, 1);	
+	nnRes = tree.nearestNeighbour (dc, 2, 1);
 	assertEquals ("Nearest neighbour give wrong distance", 1,
 		      nnRes.getDistance (), 0.0001);
     }
@@ -284,6 +284,25 @@ public class TestRTree {
 
 	nnRes = tree.nearestNeighbour (dc, 105, 99);
 	assertEquals ("Got wrong element back", rects.get (10), nnRes.get ());
+
+	Random random = new Random (6789);  // same random every time
+	for (int r = 0; r < 1000; r++) {
+	    double dd = numRects * 10 * random.nextDouble ();
+	    double x = dd + random.nextInt (2000) - 1000;
+	    double y = dd + random.nextInt (2000) - 1000;
+	    nnRes = tree.nearestNeighbour (dc, x, y);
+	    double minDist = Double.MAX_VALUE;
+	    Rectangle2D minRect = null;
+	    for (int i = 0; i < numRects; i++) {
+		Rectangle2D rx = rects.get (i);
+		double rdist = dc.distanceTo (rx, x, y);
+		if (rdist < minDist) {
+		    minDist = rdist;
+		    minRect = rx;
+		}
+	    }
+	    assertEquals ("Got wrong element back", minRect, nnRes.get ());
+	}
     }
 
     private static class RectDistance
