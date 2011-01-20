@@ -13,6 +13,7 @@ import org.khelekore.prtree.DistanceResult;
 import org.khelekore.prtree.MBR;
 import org.khelekore.prtree.MBRConverter;
 import org.khelekore.prtree.MinDist;
+import org.khelekore.prtree.NodeFilter;
 import org.khelekore.prtree.PRTree;
 import org.khelekore.prtree.SimpleMBR;
 
@@ -21,6 +22,7 @@ import static org.junit.Assert.*;
 public class TestRTree {
     private static final int BRANCH_FACTOR = 30;
     private Rectangle2DConverter converter = new Rectangle2DConverter ();
+    private NodeFilter<Rectangle2D> acceptAll = new AcceptAll<Rectangle2D> ();
     private PRTree<Rectangle2D> tree;
 
     @Before
@@ -247,11 +249,18 @@ public class TestRTree {
 
     }
 
+    private static class AcceptAll<T> implements NodeFilter<T> {
+	public boolean accept (T t) {
+	    return true;
+	}
+    }
+
     @Test
     public void testNNEmpty () {
 	tree.load (Collections.<Rectangle2D>emptyList ());
 	DistanceCalculator<Rectangle2D> dc = new RectDistance ();
-	DistanceResult<Rectangle2D> nnRes = tree.nearestNeighbour (dc, 0, 0);
+	DistanceResult<Rectangle2D> nnRes =
+	    tree.nearestNeighbour (dc, acceptAll, 0, 0);
 	assertNull ("Nearest neighbour on empty tree should be null", nnRes);
     }
 
@@ -260,12 +269,13 @@ public class TestRTree {
 	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
 	tree.load (Collections.singletonList (rx));
 	DistanceCalculator<Rectangle2D> dc = new RectDistance ();
-	DistanceResult<Rectangle2D> nnRes = tree.nearestNeighbour (dc, 0.5, 0.5);
+	DistanceResult<Rectangle2D> nnRes =
+	    tree.nearestNeighbour (dc, acceptAll, 0.5, 0.5);
 	assertNotNull ("Nearest neighbour should have a value ", nnRes);
 	assertEquals ("Nearest neighbour on rectangle should be 0", 0,
 		      nnRes.getDistance (), 0.0001);
 
-	nnRes = tree.nearestNeighbour (dc, 2, 1);
+	nnRes = tree.nearestNeighbour (dc, acceptAll, 2, 1);
 	assertEquals ("Nearest neighbour give wrong distance", 1,
 		      nnRes.getDistance (), 0.0001);
     }
@@ -279,10 +289,11 @@ public class TestRTree {
 	tree.load (rects);
 
 	DistanceCalculator<Rectangle2D> dc = new RectDistance ();
-	DistanceResult<Rectangle2D> nnRes = tree.nearestNeighbour (dc, -1, -1);
+	DistanceResult<Rectangle2D> nnRes =
+	    tree.nearestNeighbour (dc, acceptAll, -1, -1);
 	assertEquals ("Got wrong element back", rects.get (0), nnRes.get ());
 
-	nnRes = tree.nearestNeighbour (dc, 105, 99);
+	nnRes = tree.nearestNeighbour (dc, acceptAll, 105, 99);
 	assertEquals ("Got wrong element back", rects.get (10), nnRes.get ());
 
 	Random random = new Random (6789);  // same random every time
@@ -290,7 +301,7 @@ public class TestRTree {
 	    double dd = numRects * 10 * random.nextDouble ();
 	    double x = dd + random.nextInt (2000) - 1000;
 	    double y = dd + random.nextInt (2000) - 1000;
-	    nnRes = tree.nearestNeighbour (dc, x, y);
+	    nnRes = tree.nearestNeighbour (dc, acceptAll, x, y);
 	    double minDist = Double.MAX_VALUE;
 	    Rectangle2D minRect = null;
 	    for (int i = 0; i < numRects; i++) {

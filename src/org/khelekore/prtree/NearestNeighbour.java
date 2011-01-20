@@ -5,14 +5,17 @@ import java.util.PriorityQueue;
 class NearestNeighbour<T> {
 
     private final MBRConverter<T> converter;
+    private final NodeFilter<T> filter;
     private final Node<T> root;
     private final DistanceCalculator<T> dc;
     private final double x;
     private final double y;
 
-    public NearestNeighbour (MBRConverter<T> converter, Node<T> root,
-			     DistanceCalculator<T> dc, double x, double y) {
+    public NearestNeighbour (MBRConverter<T> converter, NodeFilter<T> filter,
+			     Node<T> root, DistanceCalculator<T> dc,
+			     double x, double y) {
 	this.converter = converter;
+	this.filter = filter;
 	this.root = root;
 	this.dc = dc;
 	this.x = x;
@@ -30,7 +33,7 @@ class NearestNeighbour<T> {
 	queue.add (root);
 	while (!queue.isEmpty ()) {
 	    Node<T> n = queue.remove ();
-	    res = n.nnExpand (dc, res, queue, nc);
+	    res = n.nnExpand (dc, filter, res, queue, nc);
 	}
 	return res;
     }

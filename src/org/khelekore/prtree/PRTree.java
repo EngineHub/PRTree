@@ -257,11 +257,12 @@ public class PRTree<T> {
      *         Will return null if the tree is empty.
      */
     public DistanceResult<T> nearestNeighbour (DistanceCalculator<T> dc,
+					       NodeFilter<T> filter,
 					       double x, double y) {
 	if (isEmpty ())
 	    return null;
 	NearestNeighbour<T> nn =
-	    new NearestNeighbour<T> (converter, root, dc, x, y);
+	    new NearestNeighbour<T> (converter, filter, root, dc, x, y);
 	return nn.find ();
     }
 }

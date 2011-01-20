@@ -33,6 +33,7 @@ class InternalNode<T> extends NodeBase<Node<T>, T> {
     }
 
     public DistanceResult<T> nnExpand (DistanceCalculator<T> dc,
+				       NodeFilter<T> filter,
 				       DistanceResult<T> dr,
 				       PriorityQueue<Node<T>> queue,
 				       MinDistComparator<T, Node<T>> mdc) {

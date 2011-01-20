@@ -37,12 +37,14 @@ interface Node<T> {
 
     /** Expand the nearest neighbour search
      * @param dc the DistanceCalculator to use when calculating distances
+     * @param filter the NodeFilter to use when getting node objects
      * @param currentBest the currently best result
      * @param queue where to store child nodes that needs expansion
      * @param mdc the MinDistComparator to use
      * @return the new best result
      */
     DistanceResult<T> nnExpand (DistanceCalculator<T> dc,
+				NodeFilter<T> filter,
 				DistanceResult<T> currentBest,
 				PriorityQueue<Node<T>> queue,
 				MinDistComparator<T, Node<T>> mdc);

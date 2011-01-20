@@ -35,14 +35,17 @@ class LeafNode<T> extends NodeBase<T, T> {
     }
 
     public DistanceResult<T> nnExpand (DistanceCalculator<T> dc,
+				       NodeFilter<T> filter,
 				       DistanceResult<T> dr,
 				       PriorityQueue<Node<T>> queue,
 				       MinDistComparator<T, Node<T>> mdc) {
 	for (int i = 0, s = size (); i < s; i++) {
 	    T  t = get (i);
-	    double dist = dc.distanceTo (t, mdc.x, mdc.y);
-	    if (dist < dr.getDistance ())
-		dr = new DistanceResult<T> (t, dist);
+	    if (filter.accept (t)) {
+		double dist = dc.distanceTo (t, mdc.x, mdc.y);
+		if (dist < dr.getDistance ())
+		    dr = new DistanceResult<T> (t, dist);
+	    }
 	}
 	return dr;
     }
