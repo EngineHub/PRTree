@@ -251,6 +251,7 @@ public class PRTree<T> {
 
     /** Get the nearest neighbour of the given point
      * @param dc the DistanceCalculator to use
+     * @param filter a NodeFilter that can be used to ignore some leaf nodes.
      * @param x the x coordinate to find the nearest neighbour to
      * @param y the y coordinate to find the nearest neighbour to
      * @return a DistanceResult with the nearest object and the distance.
