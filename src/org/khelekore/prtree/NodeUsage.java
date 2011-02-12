@@ -2,6 +2,7 @@ package org.khelekore.prtree;
 
 /** Information needed to be able to figure out how an
  *  element of the tree is currently used.
+ * @param <T> the type of the user data in the nodes
  */
 class NodeUsage<T> {
     /** The actual data of the node. */

@@ -3,6 +3,7 @@ package org.khelekore.prtree;
 import java.util.List;
 import java.util.PriorityQueue;
 
+
 class InternalNode<T> extends NodeBase<Node<T>, T> {
     public InternalNode (Object[] data) {
 	super (data);
@@ -32,11 +33,12 @@ class InternalNode<T> extends NodeBase<Node<T>, T> {
 	}
     }
 
-    public DistanceResult<T> nnExpand (DistanceCalculator<T> dc,
-				       NodeFilter<T> filter,
-				       DistanceResult<T> dr,
-				       PriorityQueue<Node<T>> queue,
-				       MinDistComparator<T, Node<T>> mdc) {
+    public void nnExpand (DistanceCalculator<T> dc,
+			  NodeFilter<T> filter,
+			  List<DistanceResult<T>> drs,
+			  int maxHits,
+			  PriorityQueue<Node<T>> queue,
+			  MinDistComparator<T, Node<T>> mdc) {
 	int s = size ();
 	for (int i = 0; i < s; i++) {
 	    Node<T> n = get (i);
@@ -44,9 +46,10 @@ class InternalNode<T> extends NodeBase<Node<T>, T> {
 	    double minDist = MinDist.get (mbr.getMinX (), mbr.getMinY (),
 					  mbr.getMaxX (), mbr.getMaxY (), 
 					  mdc.x, mdc.y);
-	    if (minDist <= dr.getDistance ())
+	    int t = drs.size ();
+	    // drs is sorted so we can check only the last entry
+	    if (t < maxHits || minDist <= drs.get (t - 1).getDistance ())
 		queue.add (n);
 	}
-	return dr;
     }
 }

@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /** A node getter that multiplexes min and max values
+ * @param <T> the type of the nodes user data
  * @param <N> the type of the node
  */
 class MinMaxNodeGetter<T, N> implements NodeGetter<N> {

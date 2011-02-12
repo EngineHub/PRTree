@@ -3,6 +3,7 @@ package org.khelekore.prtree;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /** A Priority R-Tree, a spatial index.
@@ -252,18 +253,21 @@ public class PRTree<T> {
     /** Get the nearest neighbour of the given point
      * @param dc the DistanceCalculator to use
      * @param filter a NodeFilter that can be used to ignore some leaf nodes.
+     * @param maxHits the maximum number of entries to find
      * @param x the x coordinate to find the nearest neighbour to
      * @param y the y coordinate to find the nearest neighbour to
      * @return a DistanceResult with the nearest object and the distance.
      *         Will return null if the tree is empty.
      */
-    public DistanceResult<T> nearestNeighbour (DistanceCalculator<T> dc,
-					       NodeFilter<T> filter,
-					       double x, double y) {
+    public List<DistanceResult<T>> nearestNeighbour (DistanceCalculator<T> dc,
+						     NodeFilter<T> filter,
+						     int maxHits,
+						     double x, double y) {
 	if (isEmpty ())
-	    return null;
+	    return Collections.emptyList ();
 	NearestNeighbour<T> nn =
-	    new NearestNeighbour<T> (converter, filter, root, dc, x, y);
+	    new NearestNeighbour<T> (converter, filter, maxHits, 
+				     root, dc, x, y);
 	return nn.find ();
     }
 }

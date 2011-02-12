@@ -3,6 +3,7 @@ package org.khelekore.prtree;
 import java.util.Comparator;
 
 /** Sort NodeUsage elements on their data elements.
+ * @param <T> the type of the nodes user data
  */
 class NodeUsageSorter<T> implements Comparator<NodeUsage<T>> {
     private Comparator<T> sorter;

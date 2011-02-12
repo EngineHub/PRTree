@@ -9,6 +9,12 @@ public class SimpleMBR implements MBR {
     private final double xmax;
     private final double ymax;
 
+    /** Create a 2D minimum bounding box
+     * @param xmin the xmin of the MBR
+     * @param ymin the ymin of the MBR
+     * @param xmax the xmax of the MBR
+     * @param ymax the ymax of the MBR
+     */
     public SimpleMBR (double xmin, double ymin, double xmax, double ymax) {
 	this.xmin = xmin;
 	this.ymin = ymin;

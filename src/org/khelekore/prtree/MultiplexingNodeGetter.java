@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** A node getter that multiplexes nodes from one or more NodeGetters.
+ * @param <T> the type of the nodes user data
  * @param <N> the type of the node
  */
 class MultiplexingNodeGetter<T, N> implements NodeGetter<N> {
