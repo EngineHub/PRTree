@@ -256,8 +256,8 @@ public class PRTree<T> {
      * @param maxHits the maximum number of entries to find
      * @param x the x coordinate to find the nearest neighbour to
      * @param y the y coordinate to find the nearest neighbour to
-     * @return a DistanceResult with the nearest object and the distance.
-     *         Will return null if the tree is empty.
+     * @return A List of DistanceResult with up to maxHits results.
+     *         Will return an empty list if this tree is empty.
      */
     public List<DistanceResult<T>> nearestNeighbour (DistanceCalculator<T> dc,
 						     NodeFilter<T> filter,

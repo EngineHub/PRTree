@@ -9,7 +9,7 @@ public interface DistanceCalculator<T> {
      * @param t the object to calculate the distance to
      * @param x the x coordinate
      * @param y the y coordinate
-     * @return the calculated distance
+     * @return The calculated distance
      */
     double distanceTo (T t, double x, double y);
 }

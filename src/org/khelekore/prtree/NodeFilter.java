@@ -6,7 +6,7 @@ package org.khelekore.prtree;
 public interface NodeFilter<T> {
     /** Check if the given node object is accepted
      * @param t the node user data
-     * @return true if t is accepted
+     * @return True if the node is accepted, false otherwise
      */
     boolean accept (T t);
 }

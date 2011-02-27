@@ -1,7 +1,7 @@
 package org.khelekore.prtree;
 
 /** Class to hold object and distance to it
- * @param <T> the type of object to calculate the distance to
+ * @param <T> The node type
  */
 public class DistanceResult<T> {
     private final T t;
@@ -17,14 +17,14 @@ public class DistanceResult<T> {
     }
 
     /** Get the object
-     * @return the object
+     * @return The node object
      */
     public T get () {
 	return t;
     }
 
     /** Get the distance
-     * @return the distance
+     * @return The distance to the node object
      */
     public double getDistance () {
 	return dist;
