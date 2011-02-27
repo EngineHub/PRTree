@@ -2,6 +2,9 @@ package org.khelekore.prtree;
 
 /** An implementation of MBR that keeps 4 double values for the actual min and
  *  max values needed.
+ *
+ * <p>Please note that you should not normally use this class when PRTree 
+ * wants a MBR since this will actually use a lot of extra memory.
  */
 public class SimpleMBR implements MBR {
     private final double xmin;

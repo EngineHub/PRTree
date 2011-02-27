@@ -3,6 +3,12 @@ package org.khelekore.prtree;
 /** Class that can calculate the MINDIST between a point and a rectangle
  */
 public class MinDist {
+    /** Do not instantiate
+     */
+    private MinDist () {
+	// empty
+    }
+
     /** Calculate the MINDIST between the given rectangle and the given point
      * @param minx the rectangle minimum x point
      * @param miny the rectangle minimum y point
