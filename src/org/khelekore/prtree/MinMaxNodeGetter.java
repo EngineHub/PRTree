@@ -51,7 +51,7 @@ class MinMaxNodeGetter<T, N> implements NodeGetter<N> {
 	this.maxPos = maxPos;
     }
 
-    public MinMaxNodeGetter<T, N> getCopyFor (int newId, int size, 
+    public MinMaxNodeGetter<T, N> getCopyFor (int newId,
 					      TakeCounter takeCounter) {
 	return new MinMaxNodeGetter<T, N> (min, max, factory, takeCounter, 
 					   newId, minPos, maxPos);

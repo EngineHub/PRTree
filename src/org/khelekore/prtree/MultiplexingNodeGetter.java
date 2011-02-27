@@ -11,7 +11,7 @@ class MultiplexingNodeGetter<T, N> implements NodeGetter<N> {
     private final List<MinMaxNodeGetter<T, N>> getters;
     private int pos;
 
-    public MultiplexingNodeGetter (MinMaxNodeGetter<T, N> n1, 
+    public MultiplexingNodeGetter (MinMaxNodeGetter<T, N> n1,
 				   MinMaxNodeGetter<T, N> n2) {
 	getters = new ArrayList<MinMaxNodeGetter<T, N>> (2);
 	getters.add (n1);
@@ -32,7 +32,7 @@ class MultiplexingNodeGetter<T, N> implements NodeGetter<N> {
 	pos %= getters.size ();
 	return getter.getNextNode (maxObjects);
     }
- 
+
     public boolean hasMoreNodes () {
 	return getters.get (pos).hasMoreNodes ();
     }
@@ -43,25 +43,25 @@ class MultiplexingNodeGetter<T, N> implements NodeGetter<N> {
 
     public List<MultiplexingNodeGetter<T, N>> split (int lowId, int highId) {
 	MinMaxNodeGetter<T, N> first = getters.get (0);
-	
+
 	List<MinMaxNodeGetter<T, N>> splitted = first.split (lowId, highId);
 	MinMaxNodeGetter<T, N> splitLow = splitted.get (0);
-	MultiplexingNodeGetter<T, N> pLow = 
+	MultiplexingNodeGetter<T, N> pLow =
 	    new MultiplexingNodeGetter<T, N> (splitLow);
 	MinMaxNodeGetter<T, N> splitHigh = splitted.get (1);
-	MultiplexingNodeGetter<T, N> pHigh = 
+	MultiplexingNodeGetter<T, N> pHigh =
 	    new MultiplexingNodeGetter<T, N> (splitHigh);
-	
+
 	TakeCounter tcLow = splitLow.getTakeCounter ();
 	TakeCounter tcHigh = splitHigh.getTakeCounter ();
 
 	for (int i = 1; i < getters.size (); i++) {
 	    MinMaxNodeGetter<T, N> g = getters.get (i);
-	    pLow.add (g.getCopyFor (lowId, splitLow.getSize (), tcLow));
-	    pHigh.add (g.getCopyFor (highId, splitHigh.getSize (), tcHigh));
+	    pLow.add (g.getCopyFor (lowId, tcLow));
+	    pHigh.add (g.getCopyFor (highId, tcHigh));
 	}
 
-	List<MultiplexingNodeGetter<T, N>> ret = 
+	List<MultiplexingNodeGetter<T, N>> ret =
 	    new ArrayList<MultiplexingNodeGetter<T, N>> (2);
 	ret.add (pLow);
 	ret.add (pHigh);
