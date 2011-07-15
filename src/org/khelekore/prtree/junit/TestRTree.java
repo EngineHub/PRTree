@@ -142,8 +142,10 @@ public class TestRTree {
 	Random random = new Random (4711);
 	Collections.shuffle (rects, random);
 	System.err.println ("loading tree");
+	long start = System.nanoTime();
 	tree.load (rects);
-	System.err.println ("tree loaded");
+	long end = System.nanoTime();
+	System.err.println ("tree loaded in " + (end - start) + " nanos");
 
 	int count = 0;
 	// dx = 10, each rect is 10 so 20 in total
