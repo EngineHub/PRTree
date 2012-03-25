@@ -53,6 +53,8 @@ public class TestRTree {
     @Test
     public void testEmpty () {
 	tree.load (Collections.<Rectangle2D>emptyList ());
+	assertEquals ("Number of leafs in empty tree is not zero",
+		      0, tree.getNumberOfLeaves ());
 	for (Rectangle2D r : tree.find (0, 0, 1, 1))
 	    fail ("should not get any results");
 	assertNull ("mbr of empty tress should be null", tree.getMBR ());
@@ -63,6 +65,8 @@ public class TestRTree {
     public void testSingle () {
 	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
 	tree.load (Collections.singletonList (rx));
+	assertEquals ("Number of leafs in tree is not correct",
+		      1, tree.getNumberOfLeaves ());
 	MBR mbr = tree.getMBR ();
 	assertEquals ("odd min for mbr", 0, mbr.getMinX (), 0);
 	assertEquals ("odd min for mbr", 0, mbr.getMinY (), 0);
@@ -109,6 +113,8 @@ public class TestRTree {
 	    rects.add (new Rectangle2D.Double (i, i, 10, 10));
 	}
 	tree.load (rects);
+	assertEquals ("Number of leafs in tree is not correct",
+		      rects.size (), tree.getNumberOfLeaves ());
 	assertEquals ("height of tree", 2, tree.getHeight ());
     }
 
@@ -146,6 +152,8 @@ public class TestRTree {
 	tree.load (rects);
 	long end = System.nanoTime();
 	System.err.println ("tree loaded in " + (end - start) + " nanos");
+	assertEquals ("Number of leafs in tree is not correct",
+		      rects.size (), tree.getNumberOfLeaves ());
 
 	int count = 0;
 	// dx = 10, each rect is 10 so 20 in total
