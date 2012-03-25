@@ -19,7 +19,7 @@ class MultiplexingNodeGetter<T, N> implements NodeGetter<N> {
     }
 
     private MultiplexingNodeGetter (MinMaxNodeGetter<T, N> n) {
-	getters = new ArrayList<MinMaxNodeGetter<T, N>> (3);
+	getters = new ArrayList<MinMaxNodeGetter<T, N>> (2);
 	getters.add (n);
     }
 
