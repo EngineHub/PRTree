@@ -1,2 +1,2 @@
-Main-Class: org.khelekore.prtree.junit.TestRTree
+Main-Class: org.khelekore.prtree.junit.RunTests
 Class-Path: ../external_libs/junit-4.5.jar

@@ -1,14 +1,14 @@
-package org.khelekore.prtree;
+package org.khelekore.prtree.nd;
 
 /**
  * @param <N> the type of the child entries
  * @param <T> the type of the data entries
  */
-abstract class NodeBase<N, T> implements Node<T> {
-    private MBR mbr;
+abstract class NodeBaseND<N, T> implements NodeND<T> {
+    private MBRND mbr;
     private Object[] data;
 
-    public NodeBase (Object[] data) {
+    public NodeBaseND (Object[] data) {
 	this.data = data;
     }
 
@@ -21,15 +21,15 @@ abstract class NodeBase<N, T> implements Node<T> {
 	return (N)data[i];
     }
     
-    public MBR getMBR (MBRConverter<T> converter) {
+    public MBRND getMBR (MBRConverterND<T> converter) {
 	if (mbr == null)
 	    mbr = computeMBR (converter);
 	return mbr;
     }
     
-    public abstract MBR computeMBR (MBRConverter<T> converter);
+    public abstract MBRND computeMBR (MBRConverterND<T> converter);
     
-    public MBR getUnion (MBR m1, MBR m2) {
+    public MBRND getUnion (MBRND m1, MBRND m2) {
 	if (m1 == null)
 	    return m2;
 	return m1.union (m2);

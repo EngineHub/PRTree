@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 
 /** Tests for PRTree
  */
-public class TestRTree {
+public class TestPRTree {
     private static final int BRANCH_FACTOR = 30;
     private Rectangle2DConverter converter = new Rectangle2DConverter ();
     private NodeFilter<Rectangle2D> acceptAll = new AcceptAll<Rectangle2D> ();
@@ -358,6 +358,6 @@ public class TestRTree {
     }
 
     public static void main (String args[]) {
-	JUnitCore.main (TestRTree.class.getName ());
+	JUnitCore.main (TestPRTree.class.getName ());
     }
 }
