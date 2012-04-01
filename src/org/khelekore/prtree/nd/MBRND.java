@@ -6,7 +6,7 @@ public interface MBRND {
     /**
      * @return the number of dimensions this bounding box has 
      */
-    public int getDimensions ();
+    int getDimensions ();
 
     /** Get the minimum value for the given axis
      * @param axis the axis to use

@@ -96,7 +96,7 @@ public class PRTreeND<T> {
     /** Get a minimum bounding box of the data stored in this tree.
      * @return the MBRND of the whole PRTree
      */
-    public MBRND getMBR () {
+    public MBRND getMBRND () {
 	return root.getMBR (converter);
     }
 

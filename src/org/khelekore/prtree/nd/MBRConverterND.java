@@ -8,7 +8,7 @@ public interface MBRConverterND<T> {
     /**
      * @return the number of dimensions this converter cares about
      */
-    public int getDimensions ();
+    int getDimensions ();
 
     /** Get the minimum coordinate value for the given t.
      * @param axis the axis to get the min value for

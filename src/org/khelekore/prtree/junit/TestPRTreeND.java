@@ -56,7 +56,7 @@ public class TestPRTreeND {
 		      0, tree.getNumberOfLeaves ());
 	for (Rectangle2D r : tree.find (new SimpleMBRND (0, 1, 0, 1)))
 	    fail ("Should not get any results, found: " + r);
-	assertNull ("mbr of empty tress should be null", tree.getMBR ());
+	assertNull ("mbr of empty tress should be null", tree.getMBRND ());
 	assertEquals ("height of empty tree", 1, tree.getHeight ());
     }
 
@@ -66,7 +66,7 @@ public class TestPRTreeND {
 	tree.load (Collections.singletonList (rx));
 	assertEquals ("Number of leafs in tree is not correct",
 		      1, tree.getNumberOfLeaves ());
-	MBRND mbr = tree.getMBR ();
+	MBRND mbr = tree.getMBRND ();
 	assertEquals ("odd min for mbr", 0, mbr.getMin (0), 0);
 	assertEquals ("odd max for mbr", 1, mbr.getMax (0), 0);
 	assertEquals ("odd min for mbr", 0, mbr.getMin (1), 0);
