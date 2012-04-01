@@ -7,10 +7,16 @@ import java.util.List;
 import java.util.Random;
 import org.junit.Before;
 import org.junit.Test;
+import org.khelekore.prtree.DistanceResult;
+import org.khelekore.prtree.NodeFilter;
+import org.khelekore.prtree.MinDist;
+import org.khelekore.prtree.nd.DistanceCalculatorND;
 import org.khelekore.prtree.nd.MBRConverterND;
 import org.khelekore.prtree.nd.MBRND;
 import org.khelekore.prtree.nd.PRTreeND;
+import org.khelekore.prtree.nd.PointND;
 import org.khelekore.prtree.nd.SimpleMBRND;
+import org.khelekore.prtree.nd.SimplePointND;
 
 import static org.junit.Assert.*;
 
@@ -20,6 +26,7 @@ public class TestPRTreeND {
     private static final int BRANCH_FACTOR = 30;
     private Rectangle2DConverter converter = new Rectangle2DConverter ();
     private PRTreeND<Rectangle2D> tree;
+    private NodeFilter<Rectangle2D> acceptAll = new AcceptAll<Rectangle2D> ();
 
     private static final double RANDOM_RANGE = 100000;
 
@@ -249,5 +256,109 @@ public class TestPRTreeND {
 	System.out.println ("TestPRTreeND: Finding " + count + " took: " +
 			    (diff / 1000000) + " millis, " +
 			    "average: " + (diff / numRounds) + " nanos");
+    }
+
+    @Test
+    public void testNNEmpty () {
+	System.out.println ("TestPRTreeND: Testing nn empty");
+	tree.load (Collections.<Rectangle2D>emptyList ());
+	DistanceCalculatorND<Rectangle2D> dc = new RectDistance ();
+	List<DistanceResult<Rectangle2D>> nnRes =
+	    tree.nearestNeighbour (dc, acceptAll, 10, new SimplePointND (0, 0));
+	assertNotNull ("Nearest neighbour should return a list ", nnRes);
+	assertEquals ("Nearest neighbour on empty tree should be empty", 0,
+		      nnRes.size ());
+    }
+
+    @Test
+    public void testNNSingle () {
+	System.out.println ("TestPRTreeND: Testing nn single");
+	Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
+	tree.load (Collections.singletonList (rx));
+	DistanceCalculatorND<Rectangle2D> dc = new RectDistance ();
+	List<DistanceResult<Rectangle2D>> nnRes =
+	    tree.nearestNeighbour (dc, acceptAll, 10, 
+				   new SimplePointND (0.5, 0.5));
+	assertNotNull ("Nearest neighbour should have a value ", nnRes);
+	assertEquals ("Wrong size of the result", 1, nnRes.size ());
+	DistanceResult<Rectangle2D> dr = nnRes.get (0);
+	assertEquals ("Nearest neighbour on rectangle should be 0", 0,
+		      dr.getDistance (), 0.0001);
+
+	nnRes = tree.nearestNeighbour (dc, acceptAll, 10, 
+				       new SimplePointND (2, 1));
+	assertEquals ("Wrong size of the result", 1, nnRes.size ());
+	dr = nnRes.get (0);
+	assertEquals ("Nearest neighbour give wrong distance", 1,
+		      dr.getDistance (), 0.0001);
+    }
+
+    @Test
+    public void testNNMany () {
+	System.out.println ("TestPRTreeND: Testing nn many");
+	int numRects = 100000;
+	List<Rectangle2D> rects = new ArrayList<Rectangle2D> (numRects);
+	for (int i = 0; i < numRects; i++)
+	    rects.add (new Rectangle2D.Double (i * 10, i * 10, 10, 10));
+	tree.load (rects);
+
+	DistanceCalculatorND<Rectangle2D> dc = new RectDistance ();
+	List<DistanceResult<Rectangle2D>> nnRes =
+	    tree.nearestNeighbour (dc, acceptAll, 10,
+				   new SimplePointND (-1, -1));
+	DistanceResult<Rectangle2D> dr = nnRes.get (0);
+	assertEquals ("Wrong size of the result", 10, nnRes.size ());
+	assertEquals ("Got wrong element back", rects.get (0), dr.get ());
+
+	nnRes = tree.nearestNeighbour (dc, acceptAll, 10,
+				       new SimplePointND (105, 99));
+	assertEquals ("Wrong size of the result", 10, nnRes.size ());
+	dr = nnRes.get (0);
+	assertEquals ("Got wrong element back", rects.get (10), dr.get ());
+
+	Random random = new Random (6789);  // same random every time
+	for (int r = 0; r < 1000; r++) {
+	    double dd = numRects * 10 * random.nextDouble ();
+	    double x = dd + random.nextInt (2000) - 1000;
+	    double y = dd + random.nextInt (2000) - 1000;
+	    PointND p = new SimplePointND (x, y);
+	    nnRes = tree.nearestNeighbour (dc, acceptAll, 10,p);
+	    double minDist = Double.MAX_VALUE;
+	    Rectangle2D minRect = null;
+	    for (int i = 0; i < numRects; i++) {
+		Rectangle2D rx = rects.get (i);
+		double rdist = dc.distanceTo (rx, p);
+		if (rdist < minDist) {
+		    minDist = rdist;
+		    minRect = rx;
+		}
+	    }
+	    dr = nnRes.get (0);
+	    assertEquals ("Got wrong element back",
+			  minRect, dr.get ());
+
+	    for (int i = 1, s = nnRes.size (); i < s; i++) {
+		DistanceResult<Rectangle2D> dr2 = nnRes.get (i);
+		assertTrue ("Bad sort order: r: " + r + ", i: " + i,
+			    dr.getDistance () < dr2.getDistance ());
+		dr = dr2;
+	    }
+	}
+    }
+
+    private static class AcceptAll<T> implements NodeFilter<T> {
+	public boolean accept (T t) {
+	    return true;
+	}
+    }
+
+    private static class RectDistance
+	implements DistanceCalculatorND<Rectangle2D> {
+	public double distanceTo (Rectangle2D r, PointND p) {
+	    double md = MinDist.get (r.getMinX (), r.getMinY (),
+				     r.getMaxX (), r.getMaxY (),
+				     p.getOrd (0), p.getOrd (1));
+	    return Math.sqrt (md);
+	}
     }
 }

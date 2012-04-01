@@ -44,9 +44,9 @@ public class SimpleMBRND implements MBRND {
 	SimpleMBRND n = new SimpleMBRND (dims);
 	int p = 0;
 	for (int i = 0; i < dims; i++) {
-	    n.values[p] = Math.min (values[p], mbr.getMin (i));
+	    n.values[p] = Math.min (getMin (i), mbr.getMin (i));
 	    p++;
-	    n.values[p] = Math.max (values[p], mbr.getMax (i));
+	    n.values[p] = Math.max (getMax (i), mbr.getMax (i));
 	    p++;
 	}
 	return n;

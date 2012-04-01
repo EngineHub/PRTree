@@ -2,8 +2,11 @@ package org.khelekore.prtree.nd;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import org.khelekore.prtree.DistanceResult;
+import org.khelekore.prtree.NodeFilter;
 
 /** A Priority R-Tree, a spatial index, for N dimensions.
  *  This tree only supports bulk loading.
@@ -197,5 +200,24 @@ public class PRTreeND<T> {
 	public void remove () {
 	    throw new UnsupportedOperationException ("Not implemented");
 	}
+    }
+
+    /** Get the nearest neighbour of the given point
+     * @param dc the DistanceCalculator to use.
+     * @param filter a NodeFilter that can be used to ignore some leaf nodes.
+     * @param maxHits the maximum number of entries to find.
+     * @param p the point to find the nearest neighbour to.
+     * @return A List of DistanceResult with up to maxHits results.
+     *         Will return an empty list if this tree is empty.
+     */
+    public List<DistanceResult<T>> nearestNeighbour (DistanceCalculatorND<T> dc,
+						     NodeFilter<T> filter,
+						     int maxHits,
+						     PointND p) {
+	if (isEmpty ())
+	    return Collections.emptyList ();
+	NearestNeighbourND<T> nn =
+	    new NearestNeighbourND<T> (converter, filter, maxHits, root, dc, p);
+	return nn.find ();
     }
 }

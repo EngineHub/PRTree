@@ -1,6 +1,9 @@
 package org.khelekore.prtree.nd;
 
 import java.util.List;
+import java.util.PriorityQueue;
+import org.khelekore.prtree.DistanceResult;
+import org.khelekore.prtree.NodeFilter;
 
 /** A node in a Priority R-Tree
  * @param <T> the data type of the elements stored in this node
@@ -33,4 +36,21 @@ interface NodeND<T> {
      * @param result the List to add the found nodes to
      */
     void find (MBRND mbr, MBRConverterND<T> converter, List<T> result);
+
+    /** Expand the nearest neighbour search
+     * @param dc the DistanceCalculator to use when calculating distances
+     * @param filter the NodeFilter to use when getting node objects
+     * @param currentFinds the currently found results, this list will
+     *        be populated
+     * @param maxHits the maximum number of entries to store
+     * @param queue where to store child nodes that needs expansion
+     * @param mdc the MinDistComparator to use
+     */
+    void nnExpand (DistanceCalculatorND<T> dc,
+		   NodeFilter<T> filter,
+		   List<DistanceResult<T>> currentFinds,
+		   int maxHits,
+		   PriorityQueue<NodeND<T>> queue,
+		   MinDistComparatorND<T, NodeND<T>> mdc);
+
 }
