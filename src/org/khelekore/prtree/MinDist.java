@@ -9,23 +9,20 @@ public class MinDist {
 	// empty
     }
 
-    /** Calculate the MINDIST between the given rectangle and the given point
-     * @param minx the rectangle minimum x point
-     * @param miny the rectangle minimum y point
-     * @param maxx the rectangle maximum x point
-     * @param maxy the rectangle maximum y point
-     * @param x the point
-     * @param y the point
+    /** Calculate the MINDIST between the given MBRND and the given point
+     * @param mbr the bounding box to use
+     * @param p the point
      * @return the squared distance
      */
-    public static double get (double minx, double miny,
-			      double maxx, double maxy,
-			      double x, double y) {
-	double rx = r (x, minx, maxx);
-	double ry = r (y, miny, maxy);
-	double xd = x - rx;
-	double yd = y - ry;
-	return xd * xd + yd * yd;	
+    public static double get (MBR mbr, PointND p) {
+	double res = 0;
+	for (int i = 0; i < p.getDimensions (); i++) {
+	    double o = p.getOrd (i);
+	    double rv = r (o, mbr.getMin (i), mbr.getMax (i));
+	    double dr = o - rv;
+	    res += dr * dr;
+	}
+	return res;
     }
 
     private static double r (double x, double min, double max) {

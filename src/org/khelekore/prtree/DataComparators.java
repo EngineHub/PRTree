@@ -1,11 +1,11 @@
-package org.khelekore.prtree.nd;
+package org.khelekore.prtree;
 
 import java.util.Comparator;
 
 class DataComparators<T> implements NodeComparators<T> {
-    private final MBRConverterND<T> converter;
+    private final MBRConverter<T> converter;
 
-    public DataComparators (MBRConverterND<T> converter) {
+    public DataComparators (MBRConverter<T> converter) {
 	this.converter = converter;
     }
 

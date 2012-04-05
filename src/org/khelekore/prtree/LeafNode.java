@@ -1,35 +1,33 @@
-package org.khelekore.prtree.nd;
+package org.khelekore.prtree;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
-import org.khelekore.prtree.DistanceResult;
-import org.khelekore.prtree.NodeFilter;
 
-class LeafNodeND<T> extends NodeBaseND<T, T> {
+class LeafNode<T> extends NodeBase<T, T> {
 
-    public LeafNodeND (Object[] data) {
+    public LeafNode (Object[] data) {
 	super (data);
     }
 
-    public MBRND getMBR (T t, MBRConverterND<T> converter) {
-	return new SimpleMBRND (t, converter);
+    public MBR getMBR (T t, MBRConverter<T> converter) {
+	return new SimpleMBR (t, converter);
     }
 
-    @Override public MBRND computeMBR (MBRConverterND<T> converter) {
-	MBRND ret = null;
+    @Override public MBR computeMBR (MBRConverter<T> converter) {
+	MBR ret = null;
 	for (int i = 0, s = size (); i < s; i++)
 	    ret = getUnion (ret, getMBR (get (i), converter));
 	return ret;
     }
 
-    public void expand (MBRND mbr, MBRConverterND<T> converter,
-			List<T> found, List<NodeND<T>> nodesToExpand) {
+    public void expand (MBR mbr, MBRConverter<T> converter,
+			List<T> found, List<Node<T>> nodesToExpand) {
 	find (mbr, converter, found);
     }
 
-    public void find (MBRND mbr, MBRConverterND<T> converter, List<T> result) {
+    public void find (MBR mbr, MBRConverter<T> converter, List<T> result) {
 	for (int i = 0, s = size (); i < s; i++) {
 	    T  t = get (i);
 	    if (mbr.intersects (t, converter))
@@ -37,12 +35,12 @@ class LeafNodeND<T> extends NodeBaseND<T, T> {
 	}
     }
 
-    public void nnExpand (DistanceCalculatorND<T> dc,
+    public void nnExpand (DistanceCalculator<T> dc,
 			  NodeFilter<T> filter,
 			  List<DistanceResult<T>> drs,
 			  int maxHits,
-			  PriorityQueue<NodeND<T>> queue,
-			  MinDistComparatorND<T, NodeND<T>> mdc) {
+			  PriorityQueue<Node<T>> queue,
+			  MinDistComparator<T, Node<T>> mdc) {
 	for (int i = 0, s = size (); i < s; i++) {
 	    T  t = get (i);
 	    if (filter.accept (t)) {

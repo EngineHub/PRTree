@@ -1,60 +1,142 @@
 package org.khelekore.prtree;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import org.khelekore.prtree.nd.DistanceCalculatorND;
-import org.khelekore.prtree.nd.MBRConverterND;
-import org.khelekore.prtree.nd.MBRND;
-import org.khelekore.prtree.nd.PRTreeND;
-import org.khelekore.prtree.nd.PointND;
-import org.khelekore.prtree.nd.SimpleMBRND;
-import org.khelekore.prtree.nd.SimplePointND;
 
-/** A Priority R-Tree, a spatial index.
+/** A Priority R-Tree, a spatial index, for N dimensions.
  *  This tree only supports bulk loading.
- *
- *  <pre>{@code
- *  PRTree<Rectangle2D> tree =
- *      new PRTree<Rectangle2D> (new Rectangle2DConverter (), 10);
- *  Rectangle2D rx = new Rectangle2D.Double (0, 0, 1, 1);
- *  tree.load (Collections.singletonList (rx));
- *  for (Rectangle2D r : tree.find (0, 0, 1, 1)) {
- *      System.out.println ("found a rectangle: " + r);
- *  }
- *  }</pre>
  *
  * @param <T> the data type stored in the PRTree
  */
-public class PRTree<T> extends PRTreeND<T> {
+public class PRTree<T> {
+
+    private MBRConverter<T> converter;
+    private int branchFactor;
+
+    private Node<T> root;
+    private int numLeafs;
+    private int height;
+
     /** Create a new PRTree using the specified branch factor.
      * @param converter the MBRConverter to use for this tree
      * @param branchFactor the number of child nodes for each internal node.
      */
     public PRTree (MBRConverter<T> converter, int branchFactor) {
-	super (new ToNDMBRConverter<T> (converter), branchFactor);
+	this.converter = converter;
+	this.branchFactor = branchFactor;
     }
 
-    private static class ToNDMBRConverter<T> implements MBRConverterND<T> {
-	private final MBRConverter<T> c;
+    /** Bulk load data into this tree.
+     *
+     *  Create the leaf nodes that each hold (up to) branchFactor data entries.
+     *  Then use the leaf nodes as data until we can fit all nodes into
+     *  the root node.
+     *
+     * @param data the collection of data to store in the tree.
+     * @throws IllegalStateException if the tree is already loaded
+     */
+    public void load (Collection<? extends T> data) {
+	if (root != null)
+	    throw new IllegalStateException ("Tree is already loaded");
+	numLeafs = data.size ();
+	LeafBuilder lb = new LeafBuilder (converter.getDimensions (), branchFactor);
 
-	public ToNDMBRConverter (MBRConverter<T> c) {
-	    this.c = c;
-	}
+	List<LeafNode<T>> leafNodes =
+	    new ArrayList<LeafNode<T>> (estimateSize (numLeafs));
+	lb.buildLeafs (data, new DataComparators<T> (converter),
+		       new LeafNodeFactory (), leafNodes);
 
-	public int getDimensions () {
-	    return 2;
+	height = 1;
+	List<? extends Node<T>> nodes = leafNodes;
+	while (nodes.size () > branchFactor) {
+	    height++;
+	    List<InternalNode<T>> internalNodes =
+		new ArrayList<InternalNode<T>> (estimateSize (nodes.size ()));
+	    lb.buildLeafs (nodes, new InternalNodeComparators<T> (converter),
+			   new InternalNodeFactory (), internalNodes);
+	    nodes = internalNodes;
 	}
+	setRoot (nodes);
+    }
 
-	public double getMin (int axis, T t) {
-	    return axis == 0 ? c.getMinX (t) : c.getMinY (t);
-	}
+    private int estimateSize (int dataSize) {
+	return (int)(1.0 / (branchFactor - 1) * dataSize);
+    }
 
-	public double getMax (int axis, T t) {
-	    return axis == 0 ? c.getMaxX (t) : c.getMaxY (t);
+    private <N extends Node<T>> void setRoot (List<N> nodes) {
+	if (nodes.size () == 0)
+	    root = new InternalNode<T> (new Object[0]);
+	else if (nodes.size () == 1) {
+	    root = nodes.get (0);
+	} else {
+	    height++;
+	    root = new InternalNode<T> (nodes.toArray ());
 	}
+    }
+
+    private class LeafNodeFactory
+	implements NodeFactory<LeafNode<T>> {
+	public LeafNode<T> create (Object[] data) {
+	    return new LeafNode<T> (data);
+	}
+    }
+
+    private class InternalNodeFactory
+	implements NodeFactory<InternalNode<T>> {
+	public InternalNode<T> create (Object[] data) {
+	    return new InternalNode<T> (data);
+	}
+    }
+
+    /** Get a 2 dimensional minimum bounding rectangle of the data
+     *  stored in this tree.
+     * @return the MBR of the whole PRTree
+     */
+    public MBR2D getMBR2D () {
+	MBR mbr = getMBR ();
+	if (mbr == null)
+	    return null;
+	return new SimpleMBR2D (mbr.getMin (0), mbr.getMin (1),
+				mbr.getMax (0), mbr.getMax (1));
+    }
+
+
+    /** Get an N dimensional minimum bounding box of the data stored
+     *  in this tree.
+     * @return the MBR of the whole PRTree
+     */
+    public MBR getMBR () {
+	return root.getMBR (converter);
+    }
+
+    /** Get the number of data leafs in this tree.
+     * @return the total number of leafs in this tree
+     */
+    public int getNumberOfLeaves () {
+	return numLeafs;
+    }
+
+    /** Check if this tree is empty
+     * @return true if the number of leafs is 0, false otherwise
+     */
+    public boolean isEmpty () {
+	return numLeafs == 0;
+    }
+
+    /** Get the height of this tree.
+     * @return the total height of this tree
+     */
+    public int getHeight () {
+	return height;
     }
 
     /** Finds all objects that intersect the given rectangle and stores
      *  the found node in the given list.
+     *  Note, this find method will only use two dimensions, no matter
+     *  how many dimensions the PRTree actually has.
      * @param xmin the minimum value of the x coordinate when searching
      * @param ymin the minimum value of the y coordinate when searching
      * @param xmax the maximum value of the x coordinate when searching
@@ -63,8 +145,7 @@ public class PRTree<T> extends PRTreeND<T> {
      */
     public void find (double xmin, double ymin, double xmax, double ymax,
 		      List<T> resultNodes) {
-	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
-	find (mbr, resultNodes);
+	find (new SimpleMBR (xmin, xmax, ymin, ymax), resultNodes);
     }
 
     /** Finds all objects that intersect the given rectangle and stores
@@ -73,19 +154,13 @@ public class PRTree<T> extends PRTreeND<T> {
      * @param resultNodes the list that will be filled with the result
      */
     public void find (MBR query, List<T> resultNodes) {
-	find (toMBRND (query), resultNodes);
+	validateRect (query);
+	root.find (query, converter, resultNodes);
     }
 
     /** Find all objects that intersect the given rectangle.
-     * @param query the bounds of the query
-     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
-     * @return an iterable of the elements inside the query rectangle
-     */
-    public Iterable<T> find (final MBR query) {
-	return find (toMBRND (query));
-    }
-
-    /** Find all objects that intersect the given rectangle.
+     *  Note, this find method will only use two dimensions, no matter
+     *  how many dimensions the PRTree actually has.
      * @param xmin the minimum value of the x coordinate when searching
      * @param ymin the minimum value of the y coordinate when searching
      * @param xmax the maximum value of the x coordinate when searching
@@ -95,40 +170,96 @@ public class PRTree<T> extends PRTreeND<T> {
      */
     public Iterable<T> find (double xmin, double ymin,
 			     double xmax, double ymax) {
-	MBR mbr = new SimpleMBR (xmin, ymin, xmax, ymax);
-	return find (mbr);
+	return find (new SimpleMBR (xmin, xmax, ymin, ymax));
     }
 
-    private MBRND toMBRND (MBR mbr) {
-	double[] values = {mbr.getMinX (), mbr.getMaxX (),
-			   mbr.getMinY (), mbr.getMaxY ()};
-	return new SimpleMBRND (values);
+    /** Find all objects that intersect the given rectangle.
+     * @param query the bounds of the query
+     * @throws IllegalArgumentException if xmin &gt; xmax or ymin &gt; ymax
+     * @return an iterable of the elements inside the query rectangle
+     */
+    public Iterable<T> find (final MBR query) {
+	validateRect (query);
+	return new Iterable<T> () {
+	    public Iterator<T> iterator () {
+		return new Finder (query);
+	    }
+	};
+    }
+
+    private void validateRect (MBR query) {
+	for (int i = 0; i < converter.getDimensions (); i++) {
+	    double max = query.getMax (i);
+	    double min = query.getMin (i);
+	    if (max < min)
+		throw new IllegalArgumentException ("max: " + max +
+						    " < min: " + min +
+						    ", axis: " + i + 
+						    ", query: " + query);
+	}
+    }
+
+    private class Finder implements Iterator<T> {
+	private MBR mbr;
+
+	private List<T> ts = new ArrayList<T> ();
+	private List<Node<T>> toVisit = new ArrayList<Node<T>> ();
+	private T next;
+
+	private int visitedNodes = 0;
+	private int dataNodesVisited = 0;
+
+	public Finder (MBR mbr) {
+	    this.mbr = mbr;
+	    toVisit.add (root);
+	    findNext ();
+	}
+
+	public boolean hasNext () {
+	    return next != null;
+	}
+
+	public T next () {
+	    T toReturn = next;
+	    findNext ();
+	    return toReturn;
+	}
+
+	private void findNext () {
+	    while (ts.isEmpty () && !toVisit.isEmpty ()) {
+		Node<T> n = toVisit.remove (toVisit.size () - 1);
+		visitedNodes++;
+		n.expand (mbr, converter, ts, toVisit);
+	    }
+	    if (ts.isEmpty ()) {
+		next = null;
+	    } else {
+		next = ts.remove (ts.size () - 1);
+		dataNodesVisited++;
+	    }
+	}
+
+	public void remove () {
+	    throw new UnsupportedOperationException ("Not implemented");
+	}
     }
 
     /** Get the nearest neighbour of the given point
-     * @param dc the DistanceCalculator to use
+     * @param dc the DistanceCalculator to use.
      * @param filter a NodeFilter that can be used to ignore some leaf nodes.
-     * @param maxHits the maximum number of entries to find
-     * @param x the x coordinate to find the nearest neighbour to
-     * @param y the y coordinate to find the nearest neighbour to
+     * @param maxHits the maximum number of entries to find.
+     * @param p the point to find the nearest neighbour to.
      * @return A List of DistanceResult with up to maxHits results.
      *         Will return an empty list if this tree is empty.
      */
     public List<DistanceResult<T>> nearestNeighbour (DistanceCalculator<T> dc,
 						     NodeFilter<T> filter,
 						     int maxHits,
-						     double x, double y) {
-	DistanceCalculatorND<T> dcnd = toDistanceCalculatorND (dc);
-	PointND p = new SimplePointND (x, y);
-	return super.nearestNeighbour (dcnd, filter, maxHits, p);
-    }
-
-    private DistanceCalculatorND<T> 
-	toDistanceCalculatorND (final DistanceCalculator<T> dc) {
-	return new DistanceCalculatorND<T> () {	
-	    public double distanceTo (T t, PointND p) {
-		return dc.distanceTo (t, p.getOrd (0), p.getOrd (1));
-	    }
-	};
+						     PointND p) {
+	if (isEmpty ())
+	    return Collections.emptyList ();
+	NearestNeighbour<T> nn =
+	    new NearestNeighbour<T> (converter, filter, maxHits, root, dc, p);
+	return nn.find ();
     }
 }

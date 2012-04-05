@@ -1,17 +1,17 @@
 package org.khelekore.prtree.junit;
 
 import org.junit.Test;
-import org.khelekore.prtree.nd.MBRND;
-import org.khelekore.prtree.nd.SimpleMBRND;
+import org.khelekore.prtree.MBR;
+import org.khelekore.prtree.SimpleMBR;
 
 import static org.junit.Assert.*;
 
 /** Tests for SimpleMBRND
  */
-public class TestSimpleMBRND {
+public class TestSimpleMBR {
     @Test
     public void testCreate () {
-	MBRND mbr = new SimpleMBRND (0, 1, 0, 1);
+	MBR mbr = new SimpleMBR (0, 1, 0, 1);
 	assertEquals (0.0, mbr.getMin (0), 0.05);
 	assertEquals (0.0, mbr.getMin (1), 0.05);
 	assertEquals (1.0, mbr.getMax (0), 0.05);
@@ -21,9 +21,9 @@ public class TestSimpleMBRND {
 
     @Test
     public void testUnion () {
-	MBRND mbr1 = new SimpleMBRND (0, 1, 0, 1);
-	MBRND mbr2 = new SimpleMBRND (2, 3, 2, 3);
-	MBRND mbr = mbr1.union (mbr2);
+	MBR mbr1 = new SimpleMBR (0, 1, 0, 1);
+	MBR mbr2 = new SimpleMBR (2, 3, 2, 3);
+	MBR mbr = mbr1.union (mbr2);
 	assertEquals (0.0, mbr.getMin (0), 0.05);
 	assertEquals (0.0, mbr.getMin (1), 0.05);
 	assertEquals (3.0, mbr.getMax (0), 0.05);

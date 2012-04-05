@@ -7,9 +7,8 @@ package org.khelekore.prtree;
 public interface DistanceCalculator<T> {
     /** Calculate the distance between the given object and the point
      * @param t the object to calculate the distance to
-     * @param x the x coordinate
-     * @param y the y coordinate
+     * @param p the point
      * @return The calculated distance
      */
-    double distanceTo (T t, double x, double y);
+    double distanceTo (T t, PointND p);
 }

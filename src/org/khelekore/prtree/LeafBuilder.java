@@ -1,4 +1,4 @@
-package org.khelekore.prtree.nd;
+package org.khelekore.prtree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,19 +12,19 @@ import java.util.List;
  *  leaf nodes (and then repeating until you have just one root node).
  *  This class creates the leaf nodes without building the full pseudo tree.
  */
-class LeafBuilderND {
+class LeafBuilder {
 
     private final int dimensions;
     private final int branchFactor;
 
-    public LeafBuilderND (int dimensions, int branchFactor) {
+    public LeafBuilder (int dimensions, int branchFactor) {
 	this.dimensions = dimensions;
 	this.branchFactor = branchFactor;
     }
 
     public <T, N> void buildLeafs (Collection<? extends T> ls,
 				   NodeComparators<T> comparators,
-				   NodeFactoryND<N> nf,
+				   NodeFactory<N> nf,
 				   List<N> leafNodes) {
 	List<NodeUsage<T>> nodes = new ArrayList<NodeUsage<T>> (ls.size ());
 	for (T t : ls)
@@ -55,7 +55,7 @@ class LeafBuilderND {
 
     private <T, N> void getLeafs (int id, int totalNumberOfElements,
 				  Circle<Noder<T, N>> getters,
-				  NodeFactoryND<N> nf, List<N> leafNodes) {
+				  NodeFactory<N> nf, List<N> leafNodes) {
 	List<Partition> partitionsToExpand = new ArrayList<Partition> ();
 	int[] pos = new int[2 * dimensions];
 	partitionsToExpand.add (new Partition (id, totalNumberOfElements, pos));
@@ -93,7 +93,8 @@ class LeafBuilderND {
 	return splitPos;
     }
 
-    private static class NodeUsageComparator<T> implements Comparator<NodeUsage<T>> {
+    private static class NodeUsageComparator<T> 
+	implements Comparator<NodeUsage<T>> {
 	private Comparator<T> sorter;
 
 	public NodeUsageComparator (Comparator<T> sorter) {
@@ -116,10 +117,11 @@ class LeafBuilderND {
 	 * @param p the Partition to get a node from
 	 * @param gi the current getter index
 	 * @param maxObjects use at most this many objects
-	 * @param nf the NodeFactoryND used to create the nodes
+	 * @param nf the NodeFactory used to create the nodes
 	 * @return the next node
 	 */
-	private N getNextNode (Partition p, int gi, int maxObjects, NodeFactoryND<N> nf) {
+	private N getNextNode (Partition p, int gi, int maxObjects,
+			       NodeFactory<N> nf) {
 
 	    Object nodeData[] = new Object[maxObjects];
 	    int s = data.size ();
@@ -132,7 +134,7 @@ class LeafBuilderND {
 		nodeData[i] = nu.getData ();
 		nu.use ();
 	    }
-
+	    
 	    for (int i = 0; i < nodeData.length; i++) {
 		if (nodeData[i] == null) {
 		    for (int j = 0; j < data.size (); j++)
@@ -166,7 +168,8 @@ class LeafBuilderND {
 	private int markPart (int numToMark, int fromId, int toId, int startPos) {
 	    NodeUsage<T> nu;
 	    while (numToMark > 0) {
-		while ((nu = data.get (startPos)) == null || nu.getOwner () != fromId)
+		while ((nu = data.get (startPos)) == null || 
+		       nu.getOwner () != fromId)
 		    startPos++;
 		nu.changeOwner (toId);
 		numToMark--;

@@ -1,27 +1,24 @@
 package org.khelekore.prtree;
 
-/** A minimum bounding rectangle
+/** A minimum bounding box for n dimensions.
  */ 
 public interface MBR {
-    /** Get the minimum x value 
-     * @return the x min value
+    /**
+     * @return the number of dimensions this bounding box has 
      */
-    double getMinX ();
+    int getDimensions ();
 
-    /** Get the minimum y value
-     * @return the y min value
+    /** Get the minimum value for the given axis
+     * @param axis the axis to use
+     * @return the min value
      */
-    double getMinY ();
+    double getMin (int axis);
 
-    /** Get the maximum x value
+    /** Get the maximum value for the given axis
+     * @param axis the axis to use
      * @return the x max value
      */
-    double getMaxX ();
-
-    /** Get the maximum y value
-     * @return the y max value
-     */
-    double getMaxY ();
+    double getMax (int axis);
 
     /** Return a new MBR that is the union of this mbr and the other 
      * @param mbr the MBR to create a union with

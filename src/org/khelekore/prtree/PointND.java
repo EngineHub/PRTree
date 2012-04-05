@@ -1,4 +1,4 @@
-package org.khelekore.prtree.nd;
+package org.khelekore.prtree;
 
 /** A description of an N-dimensional point
  */

@@ -1,69 +1,84 @@
 package org.khelekore.prtree;
 
-/** An implementation of MBR that keeps 4 double values for the actual min and
- *  max values needed.
+/** An implementation of MBRND that keeps a double array with the max
+ *  and min values
  *
- * <p>Please note that you should not normally use this class when PRTree 
+ * <p>Please note that you should not normally use this class when PRTree
  * wants a MBR since this will actually use a lot of extra memory.
  */
 public class SimpleMBR implements MBR {
-    private final double xmin;
-    private final double ymin;
-    private final double xmax;
-    private final double ymax;
+    private final double values[];
 
-    /** Create a 2D minimum bounding box
-     * @param xmin the xmin of the MBR
-     * @param ymin the ymin of the MBR
-     * @param xmax the xmax of the MBR
-     * @param ymax the ymax of the MBR
+    private SimpleMBR (int dimensions) {
+	values = new double[dimensions * 2];	
+    }
+
+    /** Create a new SimpleMBR using the given double values for max and min.
+     *  Note that the values should be stored as min, max, min, max.
+     * @param values the min and max values for each dimension.
      */
-    public SimpleMBR (double xmin, double ymin, double xmax, double ymax) {
-	this.xmin = xmin;
-	this.ymin = ymin;
-	this.xmax = xmax;
-	this.ymax = ymax;
+    public SimpleMBR (double... values) {
+	this.values = values.clone ();
     }
 
-    /** Get a string representation of this mbr. 
+    /** Create a new SimpleMBR from a given object and a MBRConverter
+     * @param t the object to create the bounding box for
+     * @param converter the actual MBRConverter to use
      */
-    @Override public String toString () {
-	return getClass ().getSimpleName () +
-	    "{xmin: " + xmin + ", ymin: " + ymin +
-	    ", xmax: " + xmax + ", ymax: " + ymax + "}";
+    public <T> SimpleMBR (T t, MBRConverter<T> converter) {
+	int dims = converter.getDimensions ();
+	values = new double[dims * 2];
+	int p = 0;
+	for (int i = 0; i < dims; i++) {
+	    values[p++] = converter.getMin (i, t);
+	    values[p++] = converter.getMax (i, t);
+	}
     }
 
-    public double getMinX () {
-	return xmin;
+    public int getDimensions () {
+	return values.length / 2;
     }
 
-    public double getMinY () {
-	return ymin;
+    public double getMin (int axis) {
+	return values[axis * 2];
     }
 
-    public double getMaxX () {
-	return xmax;
+    public double getMax (int axis) {
+	return values[axis * 2 + 1];
     }
 
-    public double getMaxY () {
-	return ymax;
-    }
-
-    public MBR union (MBR other) {
-	double uxmin = Math.min (xmin, other.getMinX ());
-	double uymin = Math.min (ymin, other.getMinY ());
-	double uxmax = Math.max (xmax, other.getMaxX ());
-	double uymax = Math.max (ymax, other.getMaxY ());
-	return new SimpleMBR (uxmin, uymin, uxmax, uymax);
+    public MBR union (MBR mbr) {
+	int dims = getDimensions ();
+	SimpleMBR n = new SimpleMBR (dims);
+	int p = 0;
+	for (int i = 0; i < dims; i++) {
+	    n.values[p] = Math.min (getMin (i), mbr.getMin (i));
+	    p++;
+	    n.values[p] = Math.max (getMax (i), mbr.getMax (i));
+	    p++;
+	}
+	return n;
     }
 
     public boolean intersects (MBR other) {
-	return !(other.getMaxX () < xmin || other.getMinX () > xmax ||
-		 other.getMaxY () < ymin || other.getMinY () > ymax);
+	for (int i = 0; i < getDimensions (); i++) {
+	    if (other.getMax (i) < getMin (i) || other.getMin (i) > getMax (i))
+		return false;
+	}
+	return true;
     }
 
     public <T> boolean intersects (T t, MBRConverter<T> converter) {
-	return !(converter.getMaxX (t) < xmin || converter.getMinX (t) > xmax ||
-		 converter.getMaxY (t) < ymin || converter.getMinY (t) > ymax);
+	for (int i = 0; i < getDimensions (); i++) {
+	    if (converter.getMax (i, t) < getMin (i) ||
+		converter.getMin (i, t) > getMax (i))
+		return false;
+	}
+	return true;
+    }
+
+    @Override public String toString () {
+	return getClass ().getSimpleName () +
+	    "{values: " + java.util.Arrays.toString (values) + "}";
     }
 }

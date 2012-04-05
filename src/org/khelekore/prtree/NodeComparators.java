@@ -1,4 +1,4 @@
-package org.khelekore.prtree.nd;
+package org.khelekore.prtree;
 
 import java.util.Comparator;
 

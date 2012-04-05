@@ -5,27 +5,22 @@ package org.khelekore.prtree;
  * @param <T> the data type stored in the PRTree
  */
 public interface MBRConverter<T> {
-    /** Get the minimum x coordinate value for the given t.
-     * @param t the object to get the mbr ordinate for
-     * @return the x min value
+    /**
+     * @return the number of dimensions this converter cares about
      */
-    double getMinX (T t);
+    int getDimensions ();
 
-    /** Get the minimum y coordinate value for the given t.
+    /** Get the minimum coordinate value for the given t.
+     * @param axis the axis to get the min value for
      * @param t the object to get the mbr ordinate for
-     * @return the y min value
+     * @return the min value for the given axis
      */
-    double getMinY (T t);
+    double getMin (int axis, T t);
 
-    /** Get the maximum x coordinate value for the given t
+    /** Get the maximum coordinate value for the given t
+     * @param axis the axis to get the max value for
      * @param t the object to get the mbr ordinate for
-     * @return the x max value
+     * @return the max value for the given axis
      */
-    double getMaxX (T t);
-
-    /** Get the maximum y coordinate value for the given t
-     * @param t the object to get the mbr ordinate for
-     * @return the y max value
-     */
-    double getMaxY (T t);
+    double getMax (int axis, T t);
 }
