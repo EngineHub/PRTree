@@ -53,17 +53,6 @@ public class PRTree<T> extends PRTreeND<T> {
 	}
     }
 
-    /** Get a minimum bounding rectangle of the data stored in this tree.
-     * @return the MBR of the whole PRTree
-     */
-    public MBR getMBR () {
-	MBRND mbr = getMBRND ();
-	if (mbr == null)
-	    return null;
-	return new SimpleMBR (mbr.getMin (0), mbr.getMin (1),
-			      mbr.getMax (0), mbr.getMax (1));
-    }
-
     /** Finds all objects that intersect the given rectangle and stores
      *  the found node in the given list.
      * @param xmin the minimum value of the x coordinate when searching

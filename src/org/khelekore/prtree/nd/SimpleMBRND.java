@@ -13,10 +13,18 @@ public class SimpleMBRND implements MBRND {
 	values = new double[dimensions * 2];	
     }
 
+    /** Create a new SimpleMBRND using the given double values for max and min.
+     *  Note that the values should be stored as min, max, min, max.
+     * @param values the min and max values for each dimension.
+     */
     public SimpleMBRND (double... values) {
 	this.values = values.clone ();
     }
 
+    /** Create a new SimpleMBRND from a given object and a MBRConverterND
+     * @param t the object to create the bounding box for
+     * @param converter the actual MBRConverterND to use
+     */
     public <T> SimpleMBRND (T t, MBRConverterND<T> converter) {
 	int dims = converter.getDimensions ();
 	values = new double[dims * 2];
