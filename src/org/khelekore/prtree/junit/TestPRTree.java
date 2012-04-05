@@ -54,7 +54,7 @@ public class TestPRTree {
 	tree.load (Collections.<Rectangle2D>emptyList ());
 	assertEquals ("Number of leafs in empty tree is not zero",
 		      0, tree.getNumberOfLeaves ());
-	for (Rectangle2D r : tree.find (new SimpleMBR (0, 1, 0, 1)))
+	for (Rectangle2D r : tree.find (0, 0, 1, 1))
 	    fail ("Should not get any results, found: " + r);
 	assertNull ("mbr of empty tress should be null", tree.getMBR ());
 	assertEquals ("height of empty tree", 1, tree.getHeight ());
@@ -73,16 +73,16 @@ public class TestPRTree {
 	assertEquals ("odd max for mbr", 1, mbr.getMax (1), 0);
 	assertEquals ("height of tree with one entry", 1, tree.getHeight ());
 	int count = 0;
-	for (Rectangle2D r : tree.find (new SimpleMBR (0, 1, 0, 1))) {
+	for (Rectangle2D r : tree.find (0, 0, 1, 1)) {
 	    assertEquals ("odd rectangle returned", rx, r);
 	    count++;
 	}
 	assertEquals ("odd number of rectangles returned", 1, count);
 
-	for (Rectangle2D r : tree.find (new SimpleMBR (5, 6, 5, 7)))
+	for (Rectangle2D r : tree.find (5, 5, 6, 7))
 	    fail ("Should not find any rectangle, got: " + r);
 
-	for (Rectangle2D r : tree.find (new SimpleMBR (-5, -2, -5, -4)))
+	for (Rectangle2D r : tree.find (-5, -5, -2, -4))
 	    fail ("Should not find any rectangle, got: " + r);
     }
 
@@ -220,8 +220,10 @@ public class TestPRTree {
 
 	System.out.println ("TestPRTree: Running speed test");
 	tree.load (rects);
-	testFindSpeedIterator ();
-	testFindSpeedArray ();
+	for (int i = 0; i < 3; i++) {
+	    testFindSpeedIterator ();
+	    testFindSpeedArray ();
+	}
     }
 
     private void testFindSpeedIterator () {
