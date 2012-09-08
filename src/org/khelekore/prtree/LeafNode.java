@@ -59,10 +59,12 @@ class LeafNode<T> extends NodeBase<T, T> {
 	int n = drs.size ();
 	if (n == maxHits)
 	    drs.remove (n - 1);
-	// binarySearch return -(pos + 1) for new entries and we always
-	// have a new entry
-	int insertionPoint = -(Collections.binarySearch (drs, dr, comp) + 1);
-	drs.add (insertionPoint, dr);
+	int pos = Collections.binarySearch (drs, dr, comp);
+	if (pos < 0) {
+	    // binarySearch return -(pos + 1) for new entries
+	    pos = -(pos + 1);
+	}
+	drs.add (pos, dr);
     }
 
     private static final Comparator<DistanceResult<?>> comp =

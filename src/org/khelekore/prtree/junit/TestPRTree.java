@@ -1,6 +1,7 @@
 package org.khelekore.prtree.junit;
 
 import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -338,13 +339,33 @@ public class TestPRTree {
 	    dr = nnRes.get (0);
 	    assertEquals ("Got wrong element back",
 			  minRect, dr.get ());
+	    checkNNSortOrder (nnRes);
+	}
+    }
 
-	    for (int i = 1, s = nnRes.size (); i < s; i++) {
-		DistanceResult<Rectangle2D> dr2 = nnRes.get (i);
-		assertTrue ("Bad sort order: r: " + r + ", i: " + i,
-			    dr.getDistance () < dr2.getDistance ());
-		dr = dr2;
-	    }
+    @Test
+    public void testNNDuplicates () {
+	System.out.println ("TestPRTree: Testing nn duplicates");
+	Rectangle2D a = new Rectangle2D.Double (0, 0, 1, 1);
+	Rectangle2D b = new Rectangle2D.Double (-1, -1, 0, 0);
+	Rectangle2D c = new Rectangle2D.Double (0, 0, 1, 1);
+	tree.load (Arrays.asList(a, b, c));
+	PointND p = new SimplePointND (0, 0);
+	int maxHits = 5;
+	DistanceCalculator<Rectangle2D> dc = new RectDistance ();
+	List<DistanceResult<Rectangle2D>> nnRes =
+	    tree.nearestNeighbour (dc, acceptAll, maxHits, p);
+	assertEquals ("Wrong number of nearest neighbours", 3, nnRes.size ());
+	checkNNSortOrder (nnRes);
+    }
+
+    private void checkNNSortOrder (List<DistanceResult<Rectangle2D>> nnRes) {
+	DistanceResult<Rectangle2D> dr = nnRes.get (0);
+	for (int i = 1, s = nnRes.size (); i < s; i++) {
+	    DistanceResult<Rectangle2D> dr2 = nnRes.get (i);
+	    assertTrue ("Bad sort order: i: " + i,
+			dr.getDistance () <= dr2.getDistance ());
+	    dr = dr2;
 	}
     }
 
