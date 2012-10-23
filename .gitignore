@@ -1,7 +1,5 @@
-classes/*
-.allclasses.txt
-.classes_to_compile
-.deps
-.packagelist
-jars/*
-javadoc/*
+.classpath
+.project
+.settings
+target
+dependency-reduced-pom.xml
